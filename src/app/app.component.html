@@ -1,0 +1,77 @@
+<ion-app>
+  <ion-menu
+    *ngIf="isAuthenticated"
+    side="start"
+    content-id="main-content"
+    type="overlay"
+    menuId="side-menu"
+  >
+    <ion-header>
+      <ion-toolbar translucent color="tertiary">
+        <ion-menu-toggle>
+          <ion-title>Menu</ion-title>
+        </ion-menu-toggle>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content color="light">
+      <ion-list class="ion-padding-end" color="light">
+        <ion-menu-toggle
+          ><ion-item
+            [routerLink]="['/home']"
+            routerLinkActive="router-link-active"
+            replaceUrl="true"
+          >
+            <ion-icon name="home-outline" slot="start"></ion-icon>
+            <ion-label>Home</ion-label>
+          </ion-item></ion-menu-toggle
+        >
+        <ion-menu-toggle
+          ><ion-item
+            [routerLink]="['/tickets']"
+            routerLinkActive="router-link-active"
+          >
+            <ion-icon name="ticket-outline" slot="start"></ion-icon>
+            <ion-label>Citation Tickets</ion-label>
+          </ion-item></ion-menu-toggle
+        >
+        <!-- <ion-menu-toggle
+          ><ion-item
+            [routerLink]="['/select-create']"
+            routerLinkActive="router-link-active"
+          >
+            <ion-icon name="create-outline" slot="start"></ion-icon>
+            <ion-label>Create Ticket</ion-label>
+          </ion-item></ion-menu-toggle
+        >
+        <ion-menu-toggle
+          ><ion-item
+            [routerLink]="['/select-search']"
+            routerLinkActive="router-link-active"
+          >
+            <ion-icon name="search-outline" slot="start"></ion-icon>
+            <ion-label>Search Ticket</ion-label>
+          </ion-item></ion-menu-toggle
+        > -->
+        <ion-menu-toggle
+          ><ion-item
+            [routerLink]="['/account-settings']"
+            routerLinkActive="router-link-active"
+          >
+            <ion-icon name="settings-outline" slot="start"></ion-icon>
+            <ion-label>Account Settings</ion-label>
+          </ion-item></ion-menu-toggle
+        >
+        <ion-menu-toggle
+          ><ion-item button (click)="logout()">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            <ion-label>Logout</ion-label>
+          </ion-item></ion-menu-toggle
+        >
+      </ion-list>
+    </ion-content>
+    <ion-footer>
+      <app-custom-footer></app-custom-footer>
+    </ion-footer>
+  </ion-menu>
+  <ion-router-outlet id="main-content"></ion-router-outlet>
+</ion-app>

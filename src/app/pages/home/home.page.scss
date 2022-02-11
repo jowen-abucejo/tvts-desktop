@@ -1,0 +1,37 @@
+.wrapper {
+  display: block;
+  position: relative;
+  height: 42vh;
+  max-height: 50vh;
+  width: 100%;
+  background-color: var(--ion-color-light);
+  overflow: hidden;
+}
+canvas {
+  border: 1px dotted red;
+}
+
+@media screen and (min-width: 992px) {
+  .custom-card {
+    max-height: 42vh;
+  }
+}
+.custom-card ion-list {
+  max-height: 85%;
+  height: 85%;
+  overflow-y: auto;
+}
+
+#ticketTable {
+  border: 1px dotted var(--ion-color-dark);
+  max-height: 100%;
+  height: 100%;
+  padding: 0;
+}
+#ticketTable div {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#ticketTable table {
+  width: 100%;
+}

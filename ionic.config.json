@@ -1,0 +1,7 @@
+{
+  "name": "tvts-mobile",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

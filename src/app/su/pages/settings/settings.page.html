@@ -1,0 +1,112 @@
+<ion-header>
+  <ion-toolbar color="tertiary">
+    <ion-buttons slot="end">
+      <ion-button
+        [routerLink]="['/login']"
+        routerLinkActive="router-link-active"
+        replaceUrl="true"
+      >
+        EXIT
+        <ion-icon slot="end" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title> SETTINGS </ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content slot="fixed" [fullscreen]="true">
+  <ion-grid fixed>
+    <ion-row class="ion-justify-content-center ion-align-items-center">
+      <ion-col size-md="6" size-lg="5" class="ion-align-items-center">
+        <ion-card color="light" class="ion-padding-vertical">
+          <ion-card-content class="ion-text-center">
+            <form [formGroup]="apiConfigFormGroup" (ngSubmit)="setApiDomain()">
+              <ion-icon
+                color="primary"
+                slot="start"
+                name="construct-outline"
+                style="font-size: 4rem"
+              ></ion-icon>
+              <ion-card-title class="ion-margin-bottom"
+                >API SETTINGS</ion-card-title
+              >
+              <ion-item>
+                <ion-label position="floating">API URL/Domain</ion-label>
+                <ion-input
+                  type="text"
+                  placeholder="Enter API Domain"
+                  formControlName="apiDomainCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">API URL/Domain</ion-label>
+                <ion-input
+                  type="text"
+                  placeholder="Enter API Version"
+                  formControlName="apiVersionCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-button
+                type="submit"
+                color="primary"
+                [disabled]="!apiConfigFormGroup.valid || !apiConfigFormGroup.dirty"
+                class="ion-margin-vertical"
+                expand="block"
+              >
+                Save
+              </ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+        <br />
+        <ion-card color="light" class="ion-padding-vertical">
+          <ion-card-content class="ion-text-center">
+            <form [formGroup]="superUserFormGroup" (ngSubmit)="setSuperUser()">
+              <ion-icon
+                color="primary"
+                slot="start"
+                name="person-circle-outline"
+                style="font-size: 4rem"
+              ></ion-icon>
+              <ion-card-title class="ion-margin-bottom"
+                >SUPERUSER SETTINGS</ion-card-title
+              >
+              <ion-item>
+                <ion-label position="floating">Username</ion-label>
+                <ion-input
+                  type="text"
+                  placeholder="Enter username"
+                  formControlName="suUsernameCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">Password</ion-label>
+                <ion-input
+                  type="password"
+                  placeholder="Enter password"
+                  formControlName="suPasswordCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">Confirm Password</ion-label>
+                <ion-input
+                  type="password"
+                  placeholder="Re-enter password"
+                  formControlName="suPasswordConfirmCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-button
+                type="submit"
+                color="primary"
+                [disabled]="!superUserFormGroup.valid || !superUserFormGroup.dirty"
+                class="ion-margin-vertical"
+                expand="block"
+              >
+                Save
+              </ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

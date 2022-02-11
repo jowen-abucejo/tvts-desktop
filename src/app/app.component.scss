@@ -1,0 +1,9 @@
+ion-item.router-link-active {
+  font-weight: bold;
+  --background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  --border-style: none;
+}
+.router-link-active ion-icon {
+  color: var(--ion-color-primary-contrast);
+}

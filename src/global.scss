@@ -1,0 +1,84 @@
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "~@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
+@import "~@ionic/angular/css/normalize.css";
+@import "~@ionic/angular/css/structure.css";
+@import "~@ionic/angular/css/typography.css";
+@import "~@ionic/angular/css/display.css";
+
+/* Optional CSS utils that can be commented out */
+@import "~@ionic/angular/css/padding.css";
+@import "~@ionic/angular/css/float-elements.css";
+@import "~@ionic/angular/css/text-alignment.css";
+@import "~@ionic/angular/css/text-transformation.css";
+@import "~@ionic/angular/css/flex-utils.css";
+
+@import "~bootstrap/dist/css/bootstrap.min.css";
+@import "~datatables.net-bs4/css/dataTables.bootstrap4.min.css";
+@import "~datatables.net-fixedheader-dt/css/fixedHeader.dataTables.css";
+@import "~datatables.net-buttons-dt/css/buttons.dataTables.css";
+
+.sc-ion-alert-md.alert-checkbox-label {
+  white-space: normal !important;
+}
+.alert-violation-selection {
+  --width: 90%;
+}
+
+.alert-checkbox-button-disabled.sc-ion-alert-md
+  .alert-button-inner.sc-ion-alert-md {
+  opacity: 1;
+}
+
+table > thead > tr > th,
+table > tfoot > tr > th {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  vertical-align: middle;
+  margin: 0;
+
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+}
+table > tbody > tr {
+  color: var(--ion-color-light-contrast);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--ion-color-light);
+}
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: var(--ion-color-light-shade);
+}
+.table-hover tbody tr:hover {
+  color: var(--ion-color-success-contrast);
+  background-color: var(--ion-color-success);
+}
+
+.alert-btn-selected {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  width: 100%;
+  text-align: center;
+}
+.alert-btn {
+  width: 100%;
+  text-align: center;
+  background-color: var(--ion-color-light);
+  color: var(--ion-color-light-contrast);
+}

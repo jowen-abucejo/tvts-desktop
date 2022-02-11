@@ -1,0 +1,80 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Account Settings</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        [routerLink]="['/home',]"
+        routerLinkActive="router-link-active"
+        replaceUrl="true"
+        ><ion-icon name="home-outline"></ion-icon
+      ></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content slot="fixed" [fullscreen]="true">
+  <ion-grid fixed>
+    <ion-row class="ion-justify-content-center ion-align-items-center">
+      <ion-col size-md="6" size-lg="5" class="ion-align-items-center">
+        <ion-card color="light" class="ion-padding-vertical">
+          <ion-card-content class="ion-text-center">
+            <form [formGroup]="accountFormGroup" (ngSubmit)="updateAccount()">
+              <ion-icon
+                color="primary"
+                slot="start"
+                name="settings-outline"
+                style="font-size: 4rem"
+              ></ion-icon>
+              <ion-card-title class="ion-margin-bottom"
+                >ACCOUNT SETTINGS</ion-card-title
+              >
+              <ion-item>
+                <ion-label position="floating">Username</ion-label>
+                <ion-input
+                  type="text"
+                  placeholder="Enter username"
+                  formControlName="username"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">Current Password</ion-label>
+                <ion-input
+                  type="password"
+                  placeholder="Enter current password"
+                  formControlName="password"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">New Password</ion-label>
+                <ion-input
+                  type="password"
+                  placeholder="Enter new password"
+                  formControlName="new_password"
+                ></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="floating">Confirm New Password</ion-label>
+                <ion-input
+                  type="password"
+                  placeholder="Confirm new password"
+                  formControlName="password_confirmation"
+                ></ion-input>
+              </ion-item>
+              <ion-button
+                type="submit"
+                color="primary"
+                [disabled]="!accountFormGroup.valid || !accountFormGroup.dirty"
+                class="ion-margin-vertical"
+                expand="block"
+              >
+                Update
+              </ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

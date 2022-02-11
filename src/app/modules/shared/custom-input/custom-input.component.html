@@ -1,0 +1,137 @@
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="input_types_cast.indexOf(type) > -1 && parentForm.get(controller)"
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-input
+    type="{{ type }}"
+    placeholder="{{ placeholder }}"
+    [formControlName]="controller"
+    readonly="{{ disabled }}"
+  ></ion-input>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="
+    (type == 'string' && parentForm.get(controller)) ||
+    (type == 'selection' &&
+      !isMultipleSelect &&
+      disabled &&
+      parentForm.get(controller))
+  "
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-input
+    type="text"
+    placeholder="{{ placeholder }}"
+    [formControlName]="controller"
+    readonly="{{ disabled }}"
+  ></ion-input>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'number' && parentForm.get(controller)"
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-input
+    type="{{ type }}"
+    placeholder="{{ placeholder }}"
+    [formControlName]="controller"
+    step="0.01"
+    readonly="{{ disabled }}"
+  ></ion-input>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'boolean' && !disabled && parentForm.get(controller)"
+>
+  <ion-label>{{ label }}</ion-label>
+  <ion-toggle (ionChange)="toggleValue()"></ion-toggle>
+</ion-item>
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'boolean' && disabled && parentForm.get(controller)"
+>
+  <ion-label>{{ label }}</ion-label>
+  <ion-toggle
+    disabled="{{ disabled }}"
+    [formControlName]="controller"
+  ></ion-toggle>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'date' && parentForm.get(controller)"
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-datetime
+    display-format="DD.MMM.YYYY"
+    [formControlName]="controller"
+    readonly="{{ disabled }}"
+  ></ion-datetime>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="
+    (type == 'selection' && parentForm.get(controller) && isMultipleSelect) ||
+    (type == 'selection' && parentForm.get(controller) && !disabled)
+  "
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-select
+    [multiple]="isMultipleSelect"
+    [formControlName]="controller"
+    [interfaceOptions]="alertOptions"
+  >
+    <ion-select-option
+      *ngFor="let option of options"
+      value="{{ option }}"
+      disabled="{{ disabled }}"
+      >{{ option }}</ion-select-option
+    >
+  </ion-select>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'mobile' && parentForm.get(controller)"
+>
+  <ion-label position="floating">{{ label }}</ion-label>
+  <ion-input
+    type="text"
+    placeholder="10-digit #"
+    [formControlName]="controller"
+    pattern="9[0-9]{9}"
+    maxlength="10"
+    minlength="10"
+    readonly="{{ disabled }}"
+  ></ion-input>
+</ion-item>
+
+<ion-item
+  [formGroup]="parentForm"
+  *ngIf="type == 'image'"
+  [hidden]="!imageData"
+>
+  <ion-label>{{ label }}</ion-label>
+  <ion-thumbnail slot="end" (click)="zoomImage()">
+    <img src="{{ imageData }}" />
+  </ion-thumbnail>
+</ion-item>
+
+<ion-button
+  *ngIf="type == 'image' && !disabled"
+  [hidden]="imageData"
+  type="button"
+  (click)="captureImage()"
+  expand="block"
+  fill="outline"
+  class="ion-margin"
+>
+  <ion-icon name="camera" slot="start"></ion-icon>
+  <ion-label>{{ label }}</ion-label>
+</ion-button>

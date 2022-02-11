@@ -1,0 +1,53 @@
+<ion-content slot="fixed" [fullscreen]="true" color="light">
+  <ion-grid fixed>
+    <ion-row class="ion-align-items-center ion-justify-content-center">
+      <ion-col size-md="6" size-lg="5">
+        <h3 class="ion-text-center">TRAFFIC VIOLATION TICKETING SYSTEM</h3>
+        <h5 class="ion-text-center">
+          <i>with QR Code and SMS Notification</i>
+        </h5>
+        <ion-card class="ion-align-self-center">
+          <ion-card-header color="primary">
+            <ion-card-subtitle>Login to your account</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <form [formGroup]="loginFormGroup" (ngSubmit)="login()">
+              <ion-item class="ion-margin-vertical">
+                <ion-label position="floating" color="primary"
+                  >Username</ion-label
+                >
+                <ion-input
+                  type="text"
+                  placeholder="Enter Username"
+                  formControlName="unameCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-item class="ion-margin-vertical">
+                <ion-label position="floating" color="primary"
+                  >Password</ion-label
+                >
+                <ion-input
+                  type="Password"
+                  placeholder="Enter Password"
+                  formControlName="passCtrl"
+                ></ion-input>
+              </ion-item>
+              <ion-button
+                type="submit"
+                expand="block"
+                fill="solid"
+                color="primary"
+                class="ion-margin-vertical"
+                [disabled]="!loginFormGroup.valid"
+              >
+                Login
+              </ion-button>
+            </form>
+          </ion-card-content>
+        </ion-card>
+        <br /><br />
+        <app-custom-footer></app-custom-footer>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
