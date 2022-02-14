@@ -25,10 +25,7 @@
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
 
-@import "~bootstrap/dist/css/bootstrap.min.css";
-@import "~datatables.net-bs4/css/dataTables.bootstrap4.min.css";
-@import "~datatables.net-fixedheader-dt/css/fixedHeader.dataTables.css";
-@import "~datatables.net-buttons-dt/css/buttons.dataTables.css";
+@import "~datatables.net-buttons-dt/css/buttons.dataTables.min.css";
 
 .sc-ion-alert-md.alert-checkbox-label {
   white-space: normal !important;
@@ -41,14 +38,10 @@
   .alert-button-inner.sc-ion-alert-md {
   opacity: 1;
 }
-
-table > thead > tr > th,
-table > tfoot > tr > th {
-  background-color: var(--ion-color-primary);
-  color: var(--ion-color-primary-contrast);
-  vertical-align: middle;
-  margin: 0;
-
+table.dataTable {
+  margin-top: 0 !important;
+}
+table > thead {
   position: sticky;
   top: 0;
   left: 0;
@@ -58,6 +51,25 @@ table > tfoot > tr > th {
 table > tbody > tr {
   color: var(--ion-color-light-contrast);
 }
+table > thead > tr > th,
+table > tfoot > tr > th {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  vertical-align: middle !important;
+  margin: 0;
+  position: relative;
+  content: none !important;
+}
+table > thead > tr > th:hover {
+  cursor: pointer;
+}
+
+tr > td,
+tr > th {
+  padding: 8px;
+  line-height: 1.5em;
+  text-align: center;
+}
 
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: var(--ion-color-light);
@@ -66,8 +78,9 @@ table > tbody > tr {
   background-color: var(--ion-color-light-shade);
 }
 .table-hover tbody tr:hover {
-  color: var(--ion-color-success-contrast);
-  background-color: var(--ion-color-success);
+  color: var(--ion-color-warning-contrast);
+  background-color: var(--ion-color-secondary);
+  font-weight: bold;
 }
 
 .alert-btn-selected {
@@ -81,4 +94,35 @@ table > tbody > tr {
   text-align: center;
   background-color: var(--ion-color-light);
   color: var(--ion-color-light-contrast);
+}
+
+/* dataTables CSS modification & positioning */
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after {
+  right: 5px !important;
+  width: 22px;
+  height: 10px;
+  position: absolute !important;
+  display: block !important;
+}
+
+table.dataTable thead .sorting:not(.sorting_asc):before,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_desc_disabled:before {
+  top: 15% !important;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Up%3C/title%3E%3Cpath fill='%23d7d8da' d='M414 321.94L274.22 158.82a24 24 0 00-36.44 0L98 321.94c-13.34 15.57-2.28 39.62 18.22 39.62h279.6c20.5 0 31.56-24.05 18.18-39.62z'/%3E%3C/svg%3E");
+}
+table.dataTable thead .sorting:not(.sorting_desc):after,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:after {
+  bottom: 30% !important;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Down%3C/title%3E%3Cpath fill='%23d7d8da' d='M98 190.06l139.78 163.12a24 24 0 0036.44 0L414 190.06c13.34-15.57 2.28-39.62-18.22-39.62h-279.6c-20.5 0-31.56 24.05-18.18 39.62z'/%3E%3C/svg%3E");
+}
+table.dataTable thead th.sorting.sorting_desc:after {
+  bottom: 30% !important;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Down%3C/title%3E%3Cpath fill='%23ffc409' d='M98 190.06l139.78 163.12a24 24 0 0036.44 0L414 190.06c13.34-15.57 2.28-39.62-18.22-39.62h-279.6c-20.5 0-31.56 24.05-18.18 39.62z'/%3E%3C/svg%3E");
+}
+table.dataTable thead th.sorting.sorting_asc:before {
+  top: 15% !important;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Up%3C/title%3E%3Cpath fill='%23ffc409' d='M414 321.94L274.22 158.82a24 24 0 00-36.44 0L98 321.94c-13.34 15.57-2.28 39.62 18.22 39.62h279.6c20.5 0 31.56-24.05 18.18-39.62z'/%3E%3C/svg%3E");
 }

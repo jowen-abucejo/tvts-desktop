@@ -7,3 +7,14 @@ ion-item.router-link-active {
 .router-link-active ion-icon {
   color: var(--ion-color-primary-contrast);
 }
+
+ion-split-pane {
+  --side-min-width: 250px;
+  --side-max-width: 250px;
+  --border: 2px solid var(--ion-color-tertiary);
+}
+
+ion-menu.id-side-menu {
+  --min-width: 250px;
+  --max-width: 250px;
+}

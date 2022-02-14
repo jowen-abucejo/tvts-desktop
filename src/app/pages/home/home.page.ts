@@ -103,7 +103,7 @@ export class HomePage implements OnInit {
 
   async ngOnInit() {
     //fetch data to be use by page from api
-    this.menuController.open('side-menu');
+    // this.menuController.open('side-menu');
     await this.apiService.getTicketCountByDate().then((data) => {
       this.page_data = data;
     });

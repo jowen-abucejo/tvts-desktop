@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 // import { App } from '@capacitor/app';
 import { AlertController, LoadingController, Platform } from '@ionic/angular';
+import { map } from 'rxjs/operators';
 import { AuthenticationService } from './services/authentication.service';
 @Component({
   selector: 'app-root',
@@ -9,7 +10,13 @@ import { AuthenticationService } from './services/authentication.service';
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent {
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.canShowPane = window.innerWidth >= 1200; //check if on lg screens
+  }
   isAuthenticated = false;
+  disabled = false;
+  canShowPane = true;
 
   constructor(
     private loadingController: LoadingController,
@@ -18,10 +25,14 @@ export class AppComponent {
     private platform: Platform,
     private alertController: AlertController
   ) {
-    router.events.subscribe((url: any) => {
-      this.isAuthenticated =
-        router.url !== '/login' && router.url !== '/settings';
-    });
+    this.canShowPane = window.innerWidth >= 992;
+    this.auth.isAuthenticated
+      .pipe(
+        map((isAuthenticated) => {
+          this.isAuthenticated = isAuthenticated;
+        })
+      )
+      .subscribe();
     // this.platform.backButton.subscribeWithPriority(-1, (processNextHandler) => {
     //   const url = this.router.url;
     //   if (url === '/home' || url === '/login' || url === '/intro') {
@@ -82,4 +93,8 @@ export class AppComponent {
 
   //   await alert.present();
   // }
+
+  togglePane() {
+    this.disabled = !this.disabled;
+  }
 }

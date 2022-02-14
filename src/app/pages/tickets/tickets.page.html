@@ -1,184 +1,176 @@
-<div class="ion-page">
-  <ion-header>
-    <ion-toolbar color="primary">
-      <ion-buttons slot="start">
-        <ion-menu-button></ion-menu-button>
-      </ion-buttons>
-      <ion-title>Tickets</ion-title>
-      <ion-searchbar
-        showCancelButton="focus"
-        animated="true"
-        slot="secondary"
-        color="light"
-        (keyup.enter)="searchTable($event.target.value)"
-        (ionCancel)="resetTable()"
-        (ionClear)="resetTable()"
-        (ionBlur)="resetTable($event.target.value)"
-      ></ion-searchbar>
-    </ion-toolbar>
-  </ion-header>
-  <ion-header>
-    <ion-toolbar id="table_button_container">
-      <ion-buttons slot="end">
-        <ion-button (click)="showSideMenu('side-menu2')">
-          <ion-icon slot="end" name="settings-outline"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-      <ion-buttons slot="start">
-        <ion-title slot="start" size="small">Export: </ion-title>
-        <ion-button
-          (click)="exportAs(1)"
-          fill="solid"
-          size="small"
-          color="secondary"
-        >
-          Copy</ion-button
-        >
-        <ion-button
-          (click)="exportAs(2)"
-          fill="solid"
-          size="small"
-          color="primary"
-        >
-          CSV
-        </ion-button>
-        <ion-button
-          (click)="exportAs(3)"
-          fill="solid"
-          size="small"
-          color="success"
-        >
-          Excel
-        </ion-button>
-        <ion-button
-          (click)="exportAs(4)"
-          fill="solid"
-          size="small"
-          color="danger"
-        >
-          PDF
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header>
-
-  <ion-content class="ion-padding" scrollY="false">
-    <ion-menu
-      side="end"
-      content-id="ticketTable"
-      type="overlay"
-      menuId="side-menu2"
-    >
-      <ion-header>
-        <ion-toolbar translucent color="tertiary">
-          <ion-title>Hide/Show Columns</ion-title>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content color="light" id="main-content2">
-        <ion-list class="ion-padding-end" color="light">
-          <ion-item>
-            <ion-label>#</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(1)"
-              [checked]="toggleModels[1]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-          <ion-item>
-            <ion-label>Violator</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(2)"
-              [checked]="toggleModels[2]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-          <ion-item>
-            <ion-label>License #</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(3)"
-              [checked]="toggleModels[3]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-          <ion-item>
-            <ion-label>Violations</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(4)"
-              [checked]="toggleModels[4]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-          <ion-item>
-            <ion-label>Date and Time</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(5)"
-              [checked]="toggleModels[5]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-          <ion-item>
-            <ion-label>Issued By</ion-label>
-            <ion-toggle
-              (ionChange)="toggleColumnVisibility(6)"
-              [checked]="toggleModels[6]"
-              slot="end"
-            ></ion-toggle>
-          </ion-item>
-        </ion-list>
-      </ion-content>
-    </ion-menu>
-    <ion-grid>
-      <ion-row
-        class="ion-justify-content-center ion-align-items-start"
-        *ngIf="isTicketsLoaded"
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Tickets</ion-title>
+    <ion-searchbar
+      showCancelButton="focus"
+      animated="true"
+      slot="secondary"
+      color="light"
+      (keyup.enter)="searchTable($event.target.value)"
+      (ionCancel)="resetTable()"
+      (ionClear)="resetTable()"
+      (ionBlur)="resetTable($event.target.value)"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+<ion-header>
+  <ion-toolbar id="table_button_container">
+    <ion-buttons slot="end">
+      <ion-button (click)="showSideMenu('side-menu2')">
+        <ion-icon slot="end" name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="start">
+      <ion-title slot="start" size="small">Export: </ion-title>
+      <ion-button
+        (click)="exportAs(1)"
+        fill="solid"
+        size="small"
+        color="primary"
       >
-        <ion-col size="12" class="wrapper">
-          <ion-content
-            id="ticketTable"
+        CSV
+      </ion-button>
+      <ion-button
+        (click)="exportAs(2)"
+        fill="solid"
+        size="small"
+        color="success"
+      >
+        Excel
+      </ion-button>
+      <ion-button
+        (click)="exportAs(3)"
+        fill="solid"
+        size="small"
+        color="danger"
+      >
+        PDF
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content scrollY="false">
+  <ion-menu
+    side="end"
+    content-id="ticketTable"
+    type="overlay"
+    menuId="side-menu2"
+  >
+    <ion-header>
+      <ion-toolbar translucent color="tertiary">
+        <ion-title>Hide/Show Columns</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list class="ion-padding-end" color="light">
+        <ion-item>
+          <ion-label>TICKET NO.</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(1)"
+            [checked]="toggleModels[1]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>NAME</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(2)"
+            [checked]="toggleModels[2]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>LICENSE NO.</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(3)"
+            [checked]="toggleModels[3]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>VIOLATIONS</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(4)"
+            [checked]="toggleModels[4]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>DATE & TIME</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(5)"
+            [checked]="toggleModels[5]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>ISSUED BY</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(6)"
+            [checked]="toggleModels[6]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-label>STATUS</ion-label>
+          <ion-toggle
+            (ionChange)="toggleColumnVisibility(7)"
+            [checked]="toggleModels[7]"
+            slot="end"
+          ></ion-toggle>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-menu>
+  <ion-grid>
+    <ion-row class="ion-justify-content-center ion-align-items-start">
+      <ion-col size="12" class="wrapper">
+        <ion-content id="ticketTable" class="ion-margin-bottom" #tableContent>
+          <table
             *ngIf="isTicketsLoaded"
-            class="table-responsive ion-margin-bottom"
+            datatable
+            [dtOptions]="dtOptions"
+            class="table table-hover table-striped table-bordered"
+            style="width: 100%"
           >
-            <table
-              datatable
-              [dtOptions]="dtOptions"
-              class="table table-hover table-striped table-bordered m-1 w-100"
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>TICKET NO.</th>
+                <th>NAME</th>
+                <th>LICENSE NO.</th>
+                <th>VIOLATIONS</th>
+                <th>DATE & TIME</th>
+                <th>ISSUED BY</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody (contextmenu)="tableClick($event)">
+              <tr *ngFor="let row of rows">
+                <td>{{ row.id }}</td>
+                <td>{{ row.number | uppercase }}</td>
+                <td>{{ row.violator.name | uppercase }}</td>
+                <td>{{ row.violator.license_number | uppercase }}</td>
+                <td>{{ row.violations | uppercase }}</td>
+                <td>{{ row.apprehension_datetime | uppercase }}</td>
+                <td>{{ row.issued_by | uppercase }}</td>
+                <td>{{ row.status_text | uppercase }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <ion-infinite-scroll threshold="2%" (ionInfinite)="loadData($event)">
+            <ion-infinite-scroll-content
+              loadingSpinner="bubbles"
+              loadingText="Loading more data..."
             >
-              <thead>
-                <tr class="text-center">
-                  <th>ID</th>
-                  <th>#</th>
-                  <th>Violator</th>
-                  <th>License #</th>
-                  <th>Violations</th>
-                  <th>Date and Time</th>
-                  <th>Issued By</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of rows">
-                  <th>{{ row.id }}</th>
-                  <td>{{ row.number }}</td>
-                  <td>{{ row.violator.name }}</td>
-                  <td>{{ row.violator.license_number }}</td>
-                  <td>{{ row.violations }}</td>
-                  <td>{{ row.apprehension_datetime }}</td>
-                  <td>{{ row.issued_by }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <ion-infinite-scroll
-              threshold="3%"
-              (ionInfinite)="loadData($event)"
-            >
-              <ion-infinite-scroll-content
-                loadingSpinner="bubbles"
-                loadingText="Loading more data..."
-              >
-              </ion-infinite-scroll-content>
-            </ion-infinite-scroll>
-          </ion-content>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </ion-content>
-</div>
+            </ion-infinite-scroll-content>
+          </ion-infinite-scroll>
+        </ion-content>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

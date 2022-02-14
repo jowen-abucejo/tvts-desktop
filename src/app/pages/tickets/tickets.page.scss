@@ -33,17 +33,13 @@ ion-searchbar {
   width: 50%;
 }
 #ticketTable {
-  border: 1px dotted var(--ion-color-dark);
-  // max-height: 100%;
-  // height: 100%;
+  border: 1px solid var(--ion-color-dark);
+  max-height: 100%;
+  height: 100%;
   padding: 0;
 }
 #ticketTable div {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100%;
-}
-
-#ticketTable table {
   width: 100%;
 }

@@ -1,7 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { DataTableDirective } from 'angular-datatables';
-import { AlertController, AlertOptions, MenuController } from '@ionic/angular';
+import { IonContent, MenuController } from '@ionic/angular';
 
 @Component({
   selector: 'app-tickets',
@@ -9,6 +9,14 @@ import { AlertController, AlertOptions, MenuController } from '@ionic/angular';
   styleUrls: ['./tickets.page.scss'],
 })
 export class TicketsPage implements OnInit {
+  hasScrollbar = false;
+
+  // checks if there's a scrollbar when the user resizes the window or zooms in/out
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.checkForScrollbar();
+  }
+
   tickets;
   isTicketsLoaded = false;
   current_page: number = 1;
@@ -18,7 +26,7 @@ export class TicketsPage implements OnInit {
   private old_current_page = 0;
   private old_last_page = 0;
   private isSearching = false;
-  toggleModels = [false, true, true, false, true, true, true];
+  toggleModels = [false, true, true, false, true, true, true, false];
 
   /*table structure START HERE*/
   rows = [];
@@ -34,16 +42,9 @@ export class TicketsPage implements OnInit {
     autoWidth: true,
     info: false,
     dom: 'rtip',
-    processing: true,
+    processing: false,
     buttons: [
       'colvis',
-      {
-        extend: 'copy',
-        text: 'Copy',
-        exportOptions: {
-          columns: ':visible',
-        },
-      },
       {
         extend: 'csv',
         text: 'CSV',
@@ -65,10 +66,19 @@ export class TicketsPage implements OnInit {
         exportOptions: {
           columns: ':visible',
         },
+        orientation: 'landscape',
+        customize: function (doc) {
+          doc.content[1].table.widths = Array(
+            doc.content[1].table.body[0].length + 1
+          )
+            .join('*')
+            .split('');
+          doc.defaultStyle.alignment = 'center';
+        },
       },
     ],
     columnDefs: [
-      { targets: [0, 3], visible: false },
+      { targets: [0, 3, 7], visible: false },
       { targets: [1, 2, 3], searchable: true },
       { targets: '_all', searchable: false, visible: true },
     ],
@@ -77,20 +87,15 @@ export class TicketsPage implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private menuController: MenuController,
-    private alertController: AlertController
+    private menuController: MenuController
   ) {}
 
   @ViewChild(DataTableDirective, { static: false })
   datatableElement: DataTableDirective;
+  @ViewChild('tableContent', { static: false }) private content: IonContent;
 
   async ngOnInit() {
-    await this.apiService
-      .getTickets()
-      .toPromise()
-      .then((data) => {
-        this.tickets = data;
-      });
+    this.tickets = await this.apiService.getTickets(1, 15).toPromise();
     if (this.tickets.data) {
       this.old_current_page = this.current_page =
         this.tickets.meta.current_page;
@@ -99,6 +104,7 @@ export class TicketsPage implements OnInit {
       this.formatTableData(this.rows);
       this.isTicketsLoaded = true;
     }
+    this.checkForScrollbar();
   }
 
   async searchTable(value: string) {
@@ -146,7 +152,7 @@ export class TicketsPage implements OnInit {
     });
   }
 
-  async loadData(event) {
+  async loadData(event?) {
     console.log('Done');
     if (this.current_page < this.last_page) {
       this.tickets = null;
@@ -175,10 +181,10 @@ export class TicketsPage implements OnInit {
           this.rows
         );
         console.log(this.current_page + ' ' + this.last_page);
-        event.target.complete();
+        event?.target.complete();
       }
     } else {
-      event.target.complete();
+      event?.target.complete();
     }
   }
 
@@ -186,7 +192,6 @@ export class TicketsPage implements OnInit {
     let n, x;
     let to_add = [];
     data.forEach((e) => {
-      e.number = e.number.replace('#', '');
       n = `${e.violator.last_name}, ${e.violator.first_name}, ${e.violator.middle_name}`;
       e.violator.name = n;
       x = e.violations.map(({ violation }) => violation);
@@ -194,15 +199,16 @@ export class TicketsPage implements OnInit {
       for (let i = 0; i < x.length; i++) {
         violations = violations + x[i] + ', ';
       }
-      e.violations = violations;
+      e.violations = violations.toUpperCase();
       let new_row = [
-        e.id,
-        e.number,
-        e.violator.name,
-        e.violator.license_number,
-        e.violations,
-        e.apprehension_datetime,
-        e.issued_by,
+        e.id + ''.toUpperCase(),
+        e.number + ''.toUpperCase(),
+        e.violator.name.toUpperCase(),
+        e.violator.license_number + ''.toUpperCase(),
+        e.violations + ''.toUpperCase(),
+        e.apprehension_datetime + ''.toUpperCase(),
+        e.issued_by + ''.toUpperCase(),
+        e.status_text + ''.toUpperCase(),
       ];
       to_add.push(new_row);
     });
@@ -221,18 +227,49 @@ export class TicketsPage implements OnInit {
   }
 
   async toggleColumnVisibility(index: number) {
-    const v = await this.isVisible(index);
+    const v = (await this.datatableElement.dtInstance).column(index).visible();
     this.datatableElement.dtInstance.then((dtInstance: DataTables.Api) => {
       dtInstance.column(index).visible(!v);
     });
   }
 
-  async isVisible(index: number) {
-    const s = (await this.datatableElement.dtInstance).column(index).visible();
-    return s;
-  }
-
   async showSideMenu(menuId: string) {
     this.menuController.toggle(menuId);
+    const dt = await this.datatableElement.dtInstance;
+    console.log(dt.data());
+  }
+
+  async tableClick(event) {
+    event.preventDefault();
+    const dtInstance = await this.datatableElement.dtInstance;
+    const row_index = event.srcElement._DT_CellIndex.row;
+    const id = dtInstance.data()[row_index][0];
+    const tn = dtInstance.data()[row_index][1];
+    alert(id + ' ' + tn);
+  }
+
+  async checkForScrollbar() {
+    const scrollElement = await this.content.getScrollElement();
+    while (!this.hasScrollbar && this.current_page < this.last_page) {
+      console.log(
+        '🚀 ~ file: tickets.page.ts ~ line 259 ~ TicketsPage ~ checkForScrollbar ~ scrollElement',
+        scrollElement
+      );
+      this.hasScrollbar =
+        scrollElement.scrollHeight > scrollElement.clientHeight;
+      console.log(
+        '🚀 ~ file: tickets.page.ts ~ line 264 ~ TicketsPage ~ checkForScrollbar ~ scrollElement.clientHeight',
+        scrollElement.clientHeight
+      );
+      console.log(
+        '🚀 ~ file: tickets.page.ts ~ line 264 ~ TicketsPage ~ checkForScrollbar ~ scrollElement.scrollHeight ',
+        scrollElement.scrollHeight
+      );
+      console.log(
+        '🚀 ~ file: tickets.page.ts ~ line 260 ~ TicketsPage ~ checkForScrollbar ~ this.hasScrollbar',
+        this.hasScrollbar
+      );
+      await this.loadData();
+    }
   }
 }
