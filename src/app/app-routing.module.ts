@@ -43,9 +43,23 @@ const routes: Routes = [
         (m) => m.AccountSettingsPageModule
       ),
     canLoad: [AuthGuard],
-  },  {
+  },
+  {
     path: 'tickets',
-    loadChildren: () => import('./pages/tickets/tickets.module').then( m => m.TicketsPageModule)
+    loadChildren: () =>
+      import('./pages/tickets/tickets.module').then((m) => m.TicketsPageModule),
+    canLoad: [AuthGuard],
+  },
+  {
+    path: 'violations',
+    loadChildren: () =>
+      import('./pages/violations/violations.module').then(
+        (m) => m.ViolationsPageModule
+      ),
+    canLoad: [AuthGuard],
+  },  {
+    path: 'blank',
+    loadChildren: () => import('./pages/blank/blank.module').then( m => m.BlankPageModule)
   },
 
 ];

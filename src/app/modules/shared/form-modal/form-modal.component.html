@@ -1,0 +1,148 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()"
+        ><ion-icon name="close"></ion-icon
+      ></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content
+  [fullscreen]="true"
+  *ngIf="(new_ticket || update_ticket) && formReady && ticketFormGroup"
+>
+  <form [formGroup]="ticketFormGroup" (ngSubmit)="createTicket()">
+    <ion-list>
+      <ion-list-header color="warning">
+        <ion-label class="ion-text-center"
+          ><b style="color: black"
+            >OFFENSE #{{
+              new_ticket
+                ? searched_violator?.tickets_count + 1
+                : searched_ticket.offense_number
+            }}</b
+          ></ion-label
+        >
+      </ion-list-header>
+      <ion-item>
+        <ion-label position="floating">Ticket Number</ion-label>
+        <ion-input formControlName="ticket_number"></ion-input>
+      </ion-item>
+      <ion-list-header color="light">
+        <ion-label color="dark">DRIVER'S DETAILS</ion-label>
+      </ion-list-header>
+      <ion-item>
+        <ion-label position="floating">Last Name</ion-label>
+        <ion-input formControlName="last_name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">First Name</ion-label>
+        <ion-input formControlName="first_name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Middle Name</ion-label>
+        <ion-input formControlName="middle_name"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Birth Date</ion-label>
+        <ion-datetime
+          display-format="DD.MMM.YYYY"
+          formControlName="birth_date"
+        ></ion-datetime>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Driver's License Number</ion-label>
+        <ion-input formControlName="license_number"></ion-input>
+      </ion-item>
+      <ng-container *ngIf="extra_inputs.ext_violators.data && ticketFormGroup">
+        <app-custom-input
+          [parentForm]="ticketFormGroup"
+          *ngFor="let extra_input of extra_inputs.ext_violators.data"
+          [type]="extra_input.data_type"
+          [label]="extra_input.text_label"
+          controller="{{ extra_input.property }}"
+          [alertOptions]="customAlertOptions"
+          [isMultipleSelect]="extra_input.is_multiple_select"
+          [options]="extra_input.options"
+          (toggleEvent)="toggleValue($event)"
+          (imageCaptureEvent)="pushImage($event)"
+        ></app-custom-input>
+      </ng-container>
+    </ion-list>
+    <ion-list>
+      <ion-list-header color="light">
+        <ion-label color="dark">TRAFFIC RELATED VIOLATION</ion-label>
+      </ion-list-header>
+      <ion-item>
+        <ion-label position="floating">Date and Time of Apprehension</ion-label>
+        <ion-datetime
+          display-format="DD.MMM.YYYY H:mm A"
+          formControlName="apprehension_datetime"
+        ></ion-datetime>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Vehicle Type</ion-label>
+        <ion-select
+          (ionChange)="changeSelectViolations()"
+          formControlName="vehicle_type"
+        >
+          <ion-select-option
+            *ngFor="let vh of vehicle_types"
+            value="{{ vh }}"
+            >{{ vh }}</ion-select-option
+          >
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Committed Violations</ion-label>
+        <ion-select
+          multiple="true"
+          formControlName="committed_violations"
+          [interfaceOptions]="customAlertOptions"
+        >
+          <ion-select-option
+            *ngFor="let violation of selectViolations"
+            value="{{ violation.id }}"
+            >{{ violation.violation }}</ion-select-option
+          >
+        </ion-select>
+      </ion-item>
+      <ng-container *ngIf="extra_inputs.ext_tickets.data && ticketFormGroup">
+        <app-custom-input
+          [parentForm]="ticketFormGroup"
+          *ngFor="let extra_input of extra_inputs.ext_tickets.data"
+          [type]="extra_input.data_type"
+          [label]="extra_input.text_label"
+          controller="{{ extra_input.property }}"
+          [alertOptions]="customAlertOptions"
+          [isMultipleSelect]="extra_input.is_multiple_select"
+          [options]="extra_input.options"
+          (toggleEvent)="toggleValue($event)"
+          (imageCaptureEvent)="pushImage($event)"
+        ></app-custom-input>
+      </ng-container>
+    </ion-list>
+    <ion-button
+      *ngIf="new_ticket"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="!ticketFormGroup.valid"
+    >
+      Create
+    </ion-button>
+    <ion-button
+      *ngIf="update_ticket"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="ticketFormGroup.pristine || !ticketFormGroup.valid"
+    >
+      Update
+    </ion-button>
+  </form>
+</ion-content>

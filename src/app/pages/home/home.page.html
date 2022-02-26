@@ -6,29 +6,43 @@
     <ion-title>Summary Report </ion-title>
   </ion-toolbar>
 </ion-header>
-<ion-content>
+<ion-content slot="fixed">
   <ion-grid>
     <ion-row class="ion-no-margin ion-no-padding">
-      <ion-col size="12" size-lg="8">
+      <ion-col size="12" size-lg="8" class="h50">
         <div
-          class="wrapper ion-padding"
-          *ngIf="isTicketCountLoaded &&  this.lineChartData.datasets[0].data.length"
+          class="wrapper ion-padding ion-justify-content-center ion-align-items-center"
+          *ngIf="isTicketCountLoaded"
         >
           <canvas
+            *ngIf="this.chartData.datasets[0].data.length"
             baseChart
-            [data]="lineChartData"
-            [options]="lineChartOptions"
-            [type]="lineChartType"
+            [data]="chartData"
+            [options]="chartOptions"
+            [type]="chartType"
           ></canvas>
+
+          <div
+            class="ion-justify-content-center ion-align-items-center"
+            style="height: 100%; width: 100%"
+            *ngIf="!this.chartData.datasets[0].data.length"
+          >
+            <h3 class="ion-text-center">NO AVAILABLE DATA</h3>
+            <ion-icon
+              color="medium"
+              name="bar-chart-outline"
+              style="height: 70%; width: 100%"
+            ></ion-icon>
+          </div>
         </div>
-        <div class="wrapper" *ngIf="!isTicketCountLoaded">
+        <div class="wrapper ion-padding" *ngIf="!isTicketCountLoaded">
           <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
         </div>
       </ion-col>
 
-      <ion-col size="12" size-lg="4">
+      <ion-col size="12" size-lg="4" class="lg-h100">
         <div class="wrapper ion-padding custom-card">
-          <h5 class="ion-no-margin ion-margin-bottom">Chart Data</h5>
+          <h5 class="ion-no-margin ion-margin-bottom">Data Distribution</h5>
 
           <ion-list
             class="ion-justify-content-center ion-padding-end"
@@ -37,7 +51,7 @@
             <ion-list-header color="medium">
               <ion-label><b>Tickets</b></ion-label>
             </ion-list-header>
-            <ion-item color>
+            <ion-item>
               <ion-label><b>Total: </b></ion-label>
               <span slot="end"
                 ><b>{{ chart_statistics.total_tickets }}</b></span
@@ -60,24 +74,25 @@
               <ion-label><b>Offenses to Violators</b></ion-label>
             </ion-list-header>
             <ion-item
-              *ngFor="let item of chart_statistics.offenses_and_violators | keyvalue"
+              *ngFor="let item of chart_statistics.offenses_and_violators"
             >
-              <ion-label
-                >{{ item.key.replace('_', ' ').replace('o', 'O')}}</ion-label
-              >
-              <span slot="end">{{ item.value.length }} Violator/s</span>
+              <ion-label>Offense #{{ item.offense_number }}</ion-label>
+              <span slot="end">{{ item.total_violator }} Violator/s</span>
             </ion-item>
           </ion-list>
           <div
             *ngIf="!chart_statistics.violations"
-            style="height: 100%; width: 100%"
+            style="height: calc(100% - 16px); width: 100%"
           >
-            <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
+            <ion-skeleton-text
+              animated
+              style="height: calc(100% - 20px); width: 100%"
+            ></ion-skeleton-text>
           </div>
         </div>
       </ion-col>
 
-      <ion-col size="12" size-lg="8">
+      <ion-col size="12" size-lg="8" class="h50 float-lg-top">
         <div class="wrapper ion-padding" *ngIf="isTicketCountLoaded">
           <h5 class="ion-no-margin ion-margin-bottom">Recent Tickets</h5>
           <div id="ticketTable" class="table-responsive">
@@ -95,7 +110,7 @@
                   <th>Date & Time</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody *ngIf="rows.length">
                 <tr *ngFor="let row of rows">
                   <td>{{ row.number }}</td>
                   <td>
@@ -124,58 +139,6 @@
             animated
             style="width: 100%; height: 100%"
           ></ion-skeleton-text>
-        </div>
-      </ion-col>
-
-      <ion-col size="12" size-lg="4">
-        <div class="wrapper ion-padding custom-card">
-          <h5 class="ion-no-margin ion-margin-bottom">
-            All-Time Records Tally
-          </h5>
-          <ion-list
-            class="ion-justify-content-center ion-padding-end"
-            *ngIf="all_time_statistics.violations"
-          >
-            <ion-list-header color="medium">
-              <ion-label><b>Tickets</b></ion-label>
-            </ion-list-header>
-            <ion-item color>
-              <ion-label><b>Total: </b></ion-label>
-              <span slot="end"
-                ><b>{{ all_time_statistics.total_tickets }}</b></span
-              >
-            </ion-item>
-            <ion-list-header color="medium">
-              <ion-label><b>Violations</b></ion-label>
-            </ion-list-header>
-            <ion-item *ngFor="let count of all_time_statistics.violations ">
-              <ion-label>{{ count.violation }}</ion-label
-              ><span slot="end">{{ count.total_tickets}}</span>
-            </ion-item>
-            <ion-item>
-              <ion-label><b>Total: </b></ion-label
-              ><span slot="end"
-                ><b>{{ all_time_statistics.total_violations }}</b></span
-              >
-            </ion-item>
-            <ion-list-header color="medium">
-              <ion-label><b>Offenses and Violators</b></ion-label>
-            </ion-list-header>
-            <ion-item
-              *ngFor="let item of all_time_statistics.offenses_and_violators | keyvalue"
-            >
-              <ion-label
-                >{{ item.key.replace('_', ' ').replace('o', 'O')}}</ion-label
-              >
-              <span slot="end">{{ item.value.length }} Violator/s</span>
-            </ion-item>
-          </ion-list>
-          <div
-            *ngIf="!all_time_statistics.violations"
-            style="height: 100%; width: 100%"
-          >
-            <ion-skeleton-text animated style="width: 100%"></ion-skeleton-text>
-          </div>
         </div>
       </ion-col>
     </ion-row>

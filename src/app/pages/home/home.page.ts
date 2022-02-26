@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MenuController } from '@ionic/angular';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+import { UtilityService } from '../../services/utility.service';
 import { ApiService } from '../../services/api.service';
 
 @Component({
@@ -17,23 +17,15 @@ export class HomePage implements OnInit {
     count_per_violations: [],
     offenses_and_violators: [],
   };
-  public all_time_statistics = {
-    total_tickets: 0,
-    total_violations: 0,
-    violations: [],
-    count_per_violations: [],
-    offenses_and_violators: [],
-  };
   private page_data;
-  private all_violations;
   private latest_violations;
   public isTicketCountLoaded = false;
 
   /*chart structure START HERE*/
-  public lineChartType: ChartType = 'bar';
+  public chartType: ChartType = 'bar';
   @ViewChild(BaseChartDirective) baseChart: BaseChartDirective;
 
-  public lineChartData: ChartConfiguration['data'] = {
+  public chartData: ChartConfiguration['data'] = {
     datasets: [
       {
         data: [],
@@ -51,7 +43,7 @@ export class HomePage implements OnInit {
     labels: [],
   };
 
-  public lineChartOptions: ChartConfiguration['options'] = {
+  public chartOptions: ChartConfiguration['options'] = {
     elements: {
       line: {
         tension: 0,
@@ -97,69 +89,61 @@ export class HomePage implements OnInit {
   /*table structure END*/
 
   constructor(
-    private menuController: MenuController,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private utility: UtilityService
   ) {}
 
   async ngOnInit() {
     //fetch data to be use by page from api
-    // this.menuController.open('side-menu');
-    await this.apiService.getTicketCountByDate().then((data) => {
-      this.page_data = data;
+    const data = await this.apiService.getTicketCountByDate().catch((res) => {
+      this.utility.alertErrorStatus(res, true, true);
+      return null;
     });
+    if (!data) return;
+    this.page_data = data.data;
+    this.prepareChartData();
+    this.prepareTableData();
 
-    //check if chart data is available
-    if (this.page_data.data.ticket_count) {
-      this.lineChartData.datasets[0].data =
-        this.page_data.data.ticket_count.map(
-          ({ total_tickets }) => total_tickets
-        );
-      this.lineChartData.labels = this.page_data.data.ticket_count.map(
-        ({ day }) => day
+    //store latest ticket count grouped by violations
+    this.latest_violations = this.page_data?.violation_count; //number of tickets for each violation within the period covered in chart
+
+    this.showRecentRecordsTally();
+  }
+
+  prepareChartData() {
+    if (this.page_data.daily_ticket) {
+      this.chartData.datasets[0].data = this.page_data.daily_ticket.map(
+        ({ total_tickets }) => total_tickets
       );
-      // }
-      this.lineChartOptions.plugins.title.text =
-        this.page_data.data.date.month +
+      this.chartData.labels = this.page_data.daily_ticket.map(({ day }) => day);
+      this.chartOptions.plugins.title.text =
+        this.page_data.date.month +
         ' ' +
-        this.page_data.data.date.year +
+        this.page_data.date.year +
         ' Issued Tickets Overview';
       this.isTicketCountLoaded = true;
     }
+  }
 
+  prepareTableData() {
     //assign data to be display in table
-    this.rows = this.page_data.data.tickets ?? [];
+    this.rows = this.page_data.tickets ?? [];
     let x;
     this.rows.forEach((e) => {
       x = e.violations.map(({ violation }) => violation);
       e.violations = x;
     });
+  }
 
-    //store all ticket count grouped by violations
-    this.all_violations =
-      this.page_data.data?.violation_count?.all_violation_ticket_count; //number of tickets for each violation
-
-    //store latest ticket count grouped by violations
-    this.latest_violations =
-      this.page_data.data?.violation_count?.violation_ticket_count_within_date; //number of tickets for each violation within the period covered in chart
-
+  showRecentRecordsTally() {
     this.chart_statistics.total_tickets = this.rows.length; //total tickets in chart
     this.chart_statistics.violations = this.latest_violations;
     this.chart_statistics.total_violations = this.latest_violations
       .map(({ total_tickets }) => total_tickets)
       .reduce((acc, cur) => acc + cur, 0); //total number of violations for all tickets issued within the period covered in chart
     this.chart_statistics.count_per_violations =
-      this.page_data.data?.violation_count?.violation_ticket_count_within_date; //number of tickets for each violation within the period covered in chart
+      this.page_data?.violation_count; //number of tickets for each violation within the period covered in chart
     this.chart_statistics.offenses_and_violators =
-      this.page_data.data?.violator_count?.violator_ticket_count_within_date; //number of tickets for each violator within the period covered in chart
-
-    this.all_time_statistics.total_tickets = this.page_data.all_ticket_count; //total number of issued tickets
-    this.all_time_statistics.total_violations = this.all_violations
-      .map(({ total_tickets }) => total_tickets)
-      .reduce((acc, cur) => acc + cur, 0); //total number of violations for all issued tickets
-    this.all_time_statistics.violations = this.all_violations;
-    this.all_time_statistics.count_per_violations =
-      this.page_data.data?.violation_count?.all_violation_ticket_count; //number of tickets for each violation
-    this.all_time_statistics.offenses_and_violators =
-      this.page_data.data?.violator_count?.all_violator_ticket_count; //number of tickets for each violator
+      this.page_data?.violator_count; //number of tickets for each violator within the period covered in chart
   }
 }

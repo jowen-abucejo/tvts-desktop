@@ -26,6 +26,11 @@
 @import "~@ionic/angular/css/flex-utils.css";
 
 @import "~datatables.net-buttons-dt/css/buttons.dataTables.min.css";
+/*custom css*/
+
+ion-icon {
+  pointer-events: none;
+}
 
 .sc-ion-alert-md.alert-checkbox-label {
   white-space: normal !important;
@@ -41,18 +46,25 @@
 table.dataTable {
   margin-top: 0 !important;
 }
-table > thead {
+table > thead:not(tr > th.sorting) {
   position: sticky;
   top: 0;
   left: 0;
   right: 0;
   z-index: 9999;
 }
+table > thead > tr > th.sorting_disabled {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  vertical-align: middle !important;
+  margin: 0;
+}
+
 table > tbody > tr {
   color: var(--ion-color-light-contrast);
 }
-table > thead > tr > th,
-table > tfoot > tr > th {
+table > thead > tr > th.sorting,
+table > tfoot > tr > th.sorting {
   background-color: var(--ion-color-primary);
   color: var(--ion-color-primary-contrast);
   vertical-align: middle !important;
@@ -64,20 +76,13 @@ table > thead > tr > th:hover {
   cursor: pointer;
 }
 
-tr > td,
-tr > th {
-  padding: 8px;
-  line-height: 1.5em;
-  text-align: center;
-}
-
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: var(--ion-color-light);
 }
 .table-striped tbody tr:nth-of-type(even) {
   background-color: var(--ion-color-light-shade);
 }
-.table-hover tbody tr:hover {
+.table-hover tbody tr:not(.child):hover {
   color: var(--ion-color-warning-contrast);
   background-color: var(--ion-color-secondary);
   font-weight: bold;
@@ -100,8 +105,10 @@ tr > th {
 table.dataTable thead .sorting:before,
 table.dataTable thead .sorting:after {
   right: 5px !important;
-  width: 22px;
-  height: 10px;
+  width: 18px;
+  height: 8px;
+  max-width: 11px;
+  max-height: 5px;
   position: absolute !important;
   display: block !important;
 }
@@ -109,20 +116,114 @@ table.dataTable thead .sorting:after {
 table.dataTable thead .sorting:not(.sorting_asc):before,
 table.dataTable thead .sorting_asc_disabled:before,
 table.dataTable thead .sorting_desc_disabled:before {
-  top: 15% !important;
+  top: 5px !important;
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Up%3C/title%3E%3Cpath fill='%23d7d8da' d='M414 321.94L274.22 158.82a24 24 0 00-36.44 0L98 321.94c-13.34 15.57-2.28 39.62 18.22 39.62h279.6c20.5 0 31.56-24.05 18.18-39.62z'/%3E%3C/svg%3E");
 }
 table.dataTable thead .sorting:not(.sorting_desc):after,
 table.dataTable thead .sorting_asc_disabled:after,
 table.dataTable thead .sorting_desc_disabled:after {
-  bottom: 30% !important;
+  bottom: 20px !important;
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Down%3C/title%3E%3Cpath fill='%23d7d8da' d='M98 190.06l139.78 163.12a24 24 0 0036.44 0L414 190.06c13.34-15.57 2.28-39.62-18.22-39.62h-279.6c-20.5 0-31.56 24.05-18.18 39.62z'/%3E%3C/svg%3E");
 }
 table.dataTable thead th.sorting.sorting_desc:after {
-  bottom: 30% !important;
+  bottom: 20px !important;
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Down%3C/title%3E%3Cpath fill='%23ffc409' d='M98 190.06l139.78 163.12a24 24 0 0036.44 0L414 190.06c13.34-15.57 2.28-39.62-18.22-39.62h-279.6c-20.5 0-31.56 24.05-18.18 39.62z'/%3E%3C/svg%3E");
 }
 table.dataTable thead th.sorting.sorting_asc:before {
-  top: 15% !important;
+  top: 5px !important;
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' class='ionicon' viewBox='0 0 512 512'%3E%3Ctitle%3ECaret Up%3C/title%3E%3Cpath fill='%23ffc409' d='M414 321.94L274.22 158.82a24 24 0 00-36.44 0L98 321.94c-13.34 15.57-2.28 39.62 18.22 39.62h279.6c20.5 0 31.56-24.05 18.18-39.62z'/%3E%3C/svg%3E");
+}
+
+table.dataTable tbody > tr > td.dtr-control {
+  padding: 8px 8px 8px calc(1em + 16px);
+  line-height: 1.5em;
+  text-align: center;
+}
+
+table.dataTable tbody > tr > td.child {
+  padding: 0;
+}
+
+table.dataTable tbody > tr > td:not(.child, .dtr-control),
+table.dataTable thead > tr > th {
+  padding: 8px;
+  line-height: 1.5em;
+}
+
+table.dataTable
+  tbody
+  > tr
+  > td:not(.dynamic-text-alignment, .ion-text-left, .ion-text-right, .child, .dtr-control),
+table.dataTable thead > tr > th {
+  text-align: center;
+}
+
+table.dataTable.dtr-inline.collapsed
+  > tbody
+  > tr.parent
+  > td.dtr-control:before {
+  content: "-";
+  background-color: var(--ion-color-danger);
+}
+
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before {
+  left: 5px;
+  height: 1em;
+  width: 1em;
+  display: block;
+  position: absolute;
+  border: 0.15em solid var(--ion-color-primary-contrast);
+  border-radius: 1em;
+  text-indent: 0 !important;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1em;
+  content: "+";
+  background-color: var(--ion-color-success);
+  color: var(--ion-color-primary-contrast);
+}
+
+tr > td.dynamic-text-alignment {
+  text-align: right;
+}
+td.child > ul.dtr-details > li {
+  line-height: 1.5em;
+}
+td.child > ul.dtr-details > li.dynamic-text-alignment {
+  text-align: left;
+}
+
+td.child > ul.dtr-details > li > span.dtr-title {
+  font-weight: bold;
+}
+td.child > ul.dtr-details > li > span.dtr-title:after {
+  content: " : ";
+}
+
+ion-toolbar p {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+.popover-viewport.sc-ion-popover-md,
+.alert-wrapper.sc-ion-alert-md {
+  border: 1px solid var(--ion-color-primary);
+  border-radius: 4px;
+}
+
+div.DTCR_pointer {
+  width: 1px;
+  background-color: var(--ion-color-primary);
+  z-index: 201;
+}
+
+ion-popover
+  > div.popover-wrapper
+  > div.popover-content.sc-ion-popover-md
+  > app-popover
+  *:not(ion-icon) {
+  font-size: 1rem;
+  line-height: 1;
 }

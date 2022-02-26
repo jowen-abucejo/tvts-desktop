@@ -12,7 +12,7 @@ export class UtilityService {
     private authService: AuthenticationService
   ) {}
 
-  async alertReLogin() {
+  async alertReLogin(reload_page: boolean = false) {
     const options = {
       inputs: [
         {
@@ -40,7 +40,9 @@ export class UtilityService {
                   async (res) => {
                     loading.dismiss();
                     const alert = await this.alertMessage('Login Success!');
-                    alert.present();
+                    alert.present().finally(() => {
+                      if (reload_page) window.location.reload();
+                    });
                   },
 
                   //show error message
@@ -103,9 +105,17 @@ export class UtilityService {
     return alert;
   }
 
-  async alertErrorStatus(response: any, re_login: boolean = true) {
+  async alertErrorStatus(
+    response: any,
+    re_login: boolean = true,
+    reload_page = false
+  ) {
+    console.log(
+      '🚀 ~ file: utility.service.ts ~ line 107 ~ UtilityService ~ alertErrorStatus ~ response',
+      response
+    );
     if (response.status === 401 && re_login) {
-      await this.alertReLogin();
+      await this.alertReLogin(reload_page);
     } else if (response.status === 401 && !re_login) {
       const alert = await this.alertMessage(
         response.error.error,

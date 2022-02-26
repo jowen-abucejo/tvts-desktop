@@ -1,0 +1,81 @@
+<ion-card-header>
+  <ion-card-title>{{ title }}</ion-card-title>
+  <ion-card-subtitle>{{ subtitle }}</ion-card-subtitle>
+</ion-card-header>
+<ion-card-content>
+  <form
+    (ngSubmit)="formSubmitCallback()"
+    [formGroup]="parentFormGroup"
+    *ngIf="isForm"
+    class="ion-no-margin"
+  >
+    <ion-list class="ion-no-padding">
+      <ion-item *ngFor="let item of items">
+        <ion-label position="{{ item.label_position }}" color="primary">{{
+          item.label
+        }}</ion-label>
+        <ion-input
+          type="{{ item.input_type }}"
+          placeholder="{{ item.placeholder }}"
+          formControlName="{{ item.controller }}"
+        ></ion-input>
+      </ion-item>
+      <ion-button
+        type="submit"
+        expand="block"
+        fill="solid"
+        color="primary"
+        [disabled]="!parentFormGroup.valid"
+        class="ion-margin-top"
+      >
+        {{ submit_label }}
+      </ion-button>
+      <br />
+      <ion-button
+        (click)="buttons[0].callback()"
+        expand="block"
+        fill="clear"
+        *ngIf="buttons.length == 1"
+        color="{{ buttons[0].color }}"
+        class="buttons[0].class"
+        size="{{ buttons[0].size }}"
+      >
+        {{ buttons[0].label }}
+      </ion-button>
+    </ion-list>
+  </form>
+
+  <ion-list
+    *ngIf="toggles.length > 0"
+    style="max-height: 25vh; overflow-y: scroll"
+  >
+    <ion-item *ngFor="let toggle of toggles">
+      <ion-label>{{ toggle.label }}</ion-label>
+      <ion-toggle
+        style="height: 0.9rem; --handle-height: 1.7rem"
+        (ionChange)="toggle.callback()"
+        checked="{{ toggle.checked }}"
+        slot="end"
+      ></ion-toggle>
+    </ion-item>
+  </ion-list>
+
+  <ion-list class="ion-no-padding" *ngIf="isContextMenu">
+    <ion-item
+      style="
+        --inner-padding-top: 0 !important;
+        --inner-padding-bottom: 0 !important;
+      "
+      class="ion-no-padding"
+      *ngFor="let item of items"
+      button
+      (click)="item.callback()"
+      lines="full"
+    >
+      <ion-icon name="{{ item.icon }}" slot="start" color="primary"></ion-icon>
+      <ion-label position="{{ item.label_position }}" color="primary">{{
+        item.label
+      }}</ion-label>
+    </ion-item>
+  </ion-list>
+</ion-card-content>

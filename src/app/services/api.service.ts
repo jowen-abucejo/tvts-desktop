@@ -18,6 +18,7 @@ export const API_URL = {
   UPDATE_USER: `users/user`,
   EMAIL_QRCODE: `tickets/email-qr`,
   GET_IMAGE: `resources/image`,
+  GET_VIOLATIONS: `violations`,
 };
 @Injectable({
   providedIn: 'root',
@@ -111,20 +112,29 @@ export class ApiService {
     page: number = 1,
     limit: number = 10,
     order: string = 'DESC',
-    search: string = ''
+    search: string = '',
+    date_range = null,
+    max_fetch_date: any = '',
+    max_date_paginated: any = ''
   ) {
-    return this.http.get(
-      `${this.api.domain}/api/${this.api.version}/${API_URL.GET_TICKETS}`,
-      {
-        headers: this.auth.createHeaderWithToken(),
-        params: {
-          page,
-          limit,
-          order,
-          search,
-        },
-      }
-    );
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_TICKETS}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          params: {
+            page,
+            limit,
+            order,
+            search,
+            start_date: date_range ? date_range[0] : '',
+            end_date: date_range ? date_range[1] : '',
+            max_fetch_date,
+            max_date_paginated,
+          },
+        }
+      )
+      .toPromise();
   }
 
   /**
@@ -207,6 +217,59 @@ export class ApiService {
         {
           headers: this.auth.createHeaderWithToken(),
           responseType: 'blob',
+        }
+      )
+      .toPromise();
+  }
+
+  getViolations(page = 1, limit = 10, order = 'ASC', search = '') {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_VIOLATIONS}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          params: {
+            page,
+            limit,
+            order,
+            search,
+          },
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Update record of ticket with the given details
+   * @param {FormData} details updated details of ticket
+   * @param ticket_id id of the ticket to update
+   * @returns Returns a promise with the status of update
+   */
+  updateTicket(details: FormData, ticket_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_TICKET}/${ticket_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Update record of violator with the given details
+   * @param details updated details of violator
+   * @param violator_id id of the violator to update
+   * @returns Returns a promise with the status of update
+   */
+  updateViolator(details: FormData, violator_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATOR}/${violator_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
         }
       )
       .toPromise();

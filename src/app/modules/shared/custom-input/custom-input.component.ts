@@ -7,8 +7,8 @@ import {
   Output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-// import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-// import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import { AlertController, ViewDidLeave } from '@ionic/angular';
 import { ApiService } from '../../../services/api.service';
 export interface imageFile {
@@ -18,13 +18,13 @@ export interface imageFile {
   path: string;
 }
 export const TMP_DIR = 'tmp_img/';
-//delete image file
-// export async function deleteImage(filepath: string) {
-//   await Filesystem.deleteFile({
-//     directory: Directory.Data,
-//     path: filepath,
-//   }).catch((err) => {});
-// }
+// delete image file
+export async function deleteImage(filepath: string) {
+  await Filesystem.deleteFile({
+    directory: Directory.Data,
+    path: filepath,
+  }).catch((err) => {});
+}
 
 @Component({
   selector: 'app-custom-input',
@@ -60,7 +60,7 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
   ionViewDidLeave(): void {
     // delete saved image when page destroy
     if (this.base64.path) {
-      // deleteImage(this.base64.path);
+      deleteImage(this.base64.path);
     }
   }
 
@@ -73,7 +73,7 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
   ngOnDestroy() {
     // delete saved image when page destroy
     if (this.base64.path) {
-      // deleteImage(this.base64.path);
+      deleteImage(this.base64.path);
     }
   }
 
@@ -81,44 +81,44 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
     this.toggleEvent.emit(this.controller);
   }
 
-  // async captureImage() {
-  //   const image = await Camera.getPhoto({
-  //     quality: 90,
-  //     allowEditing: false,
-  //     resultType: CameraResultType.Base64,
-  //     source: CameraSource.Camera,
-  //   });
+  async captureImage() {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Camera,
+    });
 
-  //   this.base64.property_name = this.controller + '';
-  //   this.base64.name = new Date().getTime() + '.jpeg';
-  //   const filepath = TMP_DIR + this.base64.name;
-  //   await Filesystem.writeFile({
-  //     directory: Directory.Data,
-  //     path: filepath,
-  //     data: image.base64String,
-  //     recursive: true,
-  //   });
+    this.base64.property_name = this.controller + '';
+    this.base64.name = new Date().getTime() + '.jpeg';
+    const filepath = TMP_DIR + this.base64.name;
+    await Filesystem.writeFile({
+      directory: Directory.Data,
+      path: filepath,
+      data: image.base64String,
+      recursive: true,
+    });
 
-  //   //delete previous saved image if exist
-  //   if (this.base64.path) {
-  //     deleteImage(this.base64.path);
-  //   }
+    //delete previous saved image if exist
+    if (this.base64.path) {
+      deleteImage(this.base64.path);
+    }
 
-  //   await this.showImage(filepath);
+    await this.showImage(filepath);
 
-  //   this.imageCaptureEvent.emit(this.base64);
-  // }
+    this.imageCaptureEvent.emit(this.base64);
+  }
 
-  // //read the saved image and show on thumbnail
-  // private async showImage(filepath: string) {
-  //   const bs64 = await Filesystem.readFile({
-  //     directory: Directory.Data,
-  //     path: filepath,
-  //   });
-  //   this.imageData = 'data:image/jpeg;base64,' + bs64.data;
-  //   this.base64.data = this.imageData;
-  //   this.base64.path = filepath;
-  // }
+  //read the saved image and show on thumbnail
+  private async showImage(filepath: string) {
+    const bs64 = await Filesystem.readFile({
+      directory: Directory.Data,
+      path: filepath,
+    });
+    this.imageData = 'data:image/jpeg;base64,' + bs64.data;
+    this.base64.data = this.imageData;
+    this.base64.path = filepath;
+  }
 
   //view image upon clicking image thumbnail
   async zoomImage() {
@@ -132,7 +132,7 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
               text: 'Retake',
               cssClass: 'dark',
               handler: () => {
-                // this.captureImage();
+                this.captureImage();
               },
             },
         {

@@ -1,5 +1,9 @@
 <ion-app>
-  <ion-split-pane contentId="main-content" when="xl" [disabled]="disabled">
+  <ion-split-pane
+    contentId="main-content"
+    when="xl"
+    [disabled]="disabled || router.url === '/login'"
+  >
     <ion-menu
       [disabled]="!isAuthenticated"
       side="start"
@@ -10,14 +14,15 @@
     >
       <ion-header>
         <ion-toolbar translucent color="tertiary">
-          <ion-menu-toggle auto-hide="false">
+          <ion-menu-toggle menu="side-menu" auto-hide="false">
             <ion-title>Menu</ion-title>
           </ion-menu-toggle>
           <ion-buttons slot="end">
             <ion-button
               (click)="togglePane()"
-              *ngIf="!disabled && canShowPane"
+              *ngIf="!disabled"
               title="Hide Side Menu"
+              class="ion-hide-xl-down"
             >
               <ion-icon
                 name="arrow-back-outline"
@@ -26,8 +31,9 @@
             </ion-button>
             <ion-button
               (click)="togglePane()"
-              *ngIf="disabled && canShowPane"
+              *ngIf="disabled"
               title="Pin Side Menu"
+              class="ion-hide-xl-down"
             >
               <ion-icon name="pin-outline"></ion-icon>
             </ion-button>
@@ -36,7 +42,7 @@
       </ion-header>
       <ion-content color="light">
         <ion-list class="ion-padding-end" color="light">
-          <ion-menu-toggle auto-hide="false"
+          <ion-menu-toggle menu="side-menu" auto-hide="false"
             ><ion-item
               [routerLink]="['/home']"
               routerLinkActive="router-link-active"
@@ -46,25 +52,25 @@
               <ion-label>Home</ion-label>
             </ion-item></ion-menu-toggle
           >
-          <ion-menu-toggle auto-hide="false"
+          <ion-menu-toggle menu="side-menu" auto-hide="false"
             ><ion-item
               [routerLink]="['/tickets']"
               routerLinkActive="router-link-active"
             >
               <ion-icon name="ticket-outline" slot="start"></ion-icon>
               <ion-label>Citation Tickets</ion-label>
-            </ion-item></ion-menu-toggle
-          >
-          <!-- <ion-menu-toggle auto-hide="false"
-          ><ion-item
-            [routerLink]="['/select-create']"
-            routerLinkActive="router-link-active"
-          >
-            <ion-icon name="create-outline" slot="start"></ion-icon>
-            <ion-label>Create Ticket</ion-label>
-          </ion-item></ion-menu-toggle
-        >
-        <ion-menu-toggle auto-hide="false"
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-menu-toggle menu="side-menu" auto-hide="false"
+            ><ion-item
+              [routerLink]="['/violations']"
+              routerLinkActive="router-link-active"
+            >
+              <ion-icon name="flag-outline" slot="start"></ion-icon>
+              <ion-label>Violations</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <!-- <ion-menu-toggle menu="side-menu" auto-hide="false"
           ><ion-item
             [routerLink]="['/select-search']"
             routerLinkActive="router-link-active"
@@ -73,7 +79,7 @@
             <ion-label>Search Ticket</ion-label>
           </ion-item></ion-menu-toggle
         > -->
-          <ion-menu-toggle auto-hide="false"
+          <ion-menu-toggle menu="side-menu" auto-hide="false"
             ><ion-item
               [routerLink]="['/account-settings']"
               routerLinkActive="router-link-active"
@@ -82,7 +88,7 @@
               <ion-label>Account Settings</ion-label>
             </ion-item></ion-menu-toggle
           >
-          <ion-menu-toggle auto-hide="false"
+          <ion-menu-toggle menu="side-menu" auto-hide="false"
             ><ion-item button (click)="logout()">
               <ion-icon name="log-out-outline" slot="start"></ion-icon>
               <ion-label>Logout</ion-label>

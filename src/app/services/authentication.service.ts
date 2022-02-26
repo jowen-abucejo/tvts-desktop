@@ -108,7 +108,7 @@ export class AuthenticationService {
 
   async logout() {
     if (this.token) {
-      await this.http
+      this.http
         .post(
           `${this.api_object.domain}/api/${this.api_object.version}/${API_URL.REQUEST_LOGOUT}`,
           {},

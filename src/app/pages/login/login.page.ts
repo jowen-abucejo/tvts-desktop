@@ -48,19 +48,23 @@ export class LoginPage implements OnInit, ViewDidLeave {
       this.loading.dismiss();
       this.router.navigateByUrl('settings');
     } else {
-      this.auth.login(u, p).then(
-        //redirect on successful login
+      const success = await this.auth.login(u, p).then(
         (res) => {
-          this.loading.dismiss();
-          this.router.navigateByUrl('home', { replaceUrl: true });
+          return true;
         },
 
         //show error message
         async (res) => {
           this.loading.dismiss();
           await this.utility.alertErrorStatus(res, false);
+          return false;
         }
       );
+      if (success) {
+        //redirect on successful login
+        await this.loading.dismiss();
+        this.router.navigateByUrl('home', { replaceUrl: true });
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ import { TicketsPageRoutingModule } from './tickets-routing.module';
 
 import { TicketsPage } from './tickets.page';
 import { DataTablesModule } from 'angular-datatables';
+import { SharedModule } from '../../modules/shared/shared.module';
 
 @NgModule({
   imports: [
@@ -17,6 +18,7 @@ import { DataTablesModule } from 'angular-datatables';
     TicketsPageRoutingModule,
     ReactiveFormsModule,
     DataTablesModule,
+    SharedModule,
   ],
   declarations: [TicketsPage],
 })

@@ -25,7 +25,6 @@ export class AppComponent {
     private platform: Platform,
     private alertController: AlertController
   ) {
-    this.canShowPane = window.innerWidth >= 992;
     this.auth.isAuthenticated
       .pipe(
         map((isAuthenticated) => {
