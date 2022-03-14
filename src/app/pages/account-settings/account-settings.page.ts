@@ -92,6 +92,7 @@ export class AccountSettingsPage implements OnInit {
     for (const key in this.accountFormGroup.value) {
       formData.append(key, this.accountFormGroup.get(key).value);
     }
+    formData.append('_method', 'PUT');
     return formData;
   }
 }

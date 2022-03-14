@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { IonSlides } from '@ionic/angular';
 import { INTRO_KEY } from '../../guards/intro.guard';
 import { StorageService } from '../../services/storage.service';
 
@@ -12,6 +13,15 @@ export class IntroPage implements OnInit {
   constructor(private router: Router, private storage: StorageService) {}
 
   ngOnInit() {}
+
+  @ViewChild(IonSlides) slides: IonSlides;
+
+  slidePrev() {
+    this.slides.slidePrev();
+  }
+  slideNext() {
+    this.slides.slideNext();
+  }
 
   async goToLogin() {
     await this.storage.set(INTRO_KEY, true);

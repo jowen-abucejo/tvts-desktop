@@ -13,7 +13,7 @@
   [fullscreen]="true"
   *ngIf="(new_ticket || update_ticket) && formReady && ticketFormGroup"
 >
-  <form [formGroup]="ticketFormGroup" (ngSubmit)="createTicket()">
+  <form [formGroup]="ticketFormGroup" (ngSubmit)="startTicketAction()">
     <ion-list>
       <ion-list-header color="warning">
         <ion-label class="ion-text-center"
@@ -22,31 +22,42 @@
               new_ticket
                 ? searched_violator?.tickets_count + 1
                 : searched_ticket.offense_number
-            }}</b
-          ></ion-label
+            }}<span *ngIf="update_ticket">&nbsp;:&nbsp;</span
+            ><i *ngIf="update_ticket">( {{ searched_ticket?.status_text }} )</i>
+          </b></ion-label
         >
       </ion-list-header>
       <ion-item>
-        <ion-label position="floating">Ticket Number</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Ticket Number</ion-label
+        >
         <ion-input formControlName="ticket_number"></ion-input>
       </ion-item>
       <ion-list-header color="light">
         <ion-label color="dark">DRIVER'S DETAILS</ion-label>
       </ion-list-header>
       <ion-item>
-        <ion-label position="floating">Last Name</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Last Name</ion-label
+        >
         <ion-input formControlName="last_name"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">First Name</ion-label>
+        <ion-label position="floating" class="required-field"
+          >First Name</ion-label
+        >
         <ion-input formControlName="first_name"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Middle Name</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Middle Name</ion-label
+        >
         <ion-input formControlName="middle_name"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Birth Date</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Birth Date</ion-label
+        >
         <ion-datetime
           display-format="DD.MMM.YYYY"
           formControlName="birth_date"
@@ -68,6 +79,7 @@
           [options]="extra_input.options"
           (toggleEvent)="toggleValue($event)"
           (imageCaptureEvent)="pushImage($event)"
+          [required_field]="extra_input.is_required"
         ></app-custom-input>
       </ng-container>
     </ion-list>
@@ -76,15 +88,38 @@
         <ion-label color="dark">TRAFFIC RELATED VIOLATION</ion-label>
       </ion-list-header>
       <ion-item>
-        <ion-label position="floating">Date and Time of Apprehension</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Date and Time of Apprehension</ion-label
+        >
         <ion-datetime
-          display-format="DD.MMM.YYYY H:mm A"
+          display-format="DD.MMM.YYYY h:mm A"
           formControlName="apprehension_datetime"
         ></ion-datetime>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Vehicle Type</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Apprehending Officer</ion-label
+        >
         <ion-select
+          [disabled]="
+            update_ticket && searched_ticket.status_text === 'SETTLED'
+          "
+          formControlName="officer_user_id"
+          [interfaceOptions]="customAlertOptions"
+        >
+          <ion-select-option *ngFor="let user of users" value="{{ user.id }}">{{
+            user.name
+          }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating" class="required-field"
+          >Vehicle Type</ion-label
+        >
+        <ion-select
+          [disabled]="
+            update_ticket && searched_ticket.status_text === 'SETTLED'
+          "
           (ionChange)="changeSelectViolations()"
           formControlName="vehicle_type"
         >
@@ -96,8 +131,13 @@
         </ion-select>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Committed Violations</ion-label>
+        <ion-label position="floating" class="required-field"
+          >Committed Violations</ion-label
+        >
         <ion-select
+          [disabled]="
+            update_ticket && searched_ticket.status_text === 'SETTLED'
+          "
           multiple="true"
           formControlName="committed_violations"
           [interfaceOptions]="customAlertOptions"
@@ -121,6 +161,7 @@
           [options]="extra_input.options"
           (toggleEvent)="toggleValue($event)"
           (imageCaptureEvent)="pushImage($event)"
+          [required_field]="extra_input.is_required"
         ></app-custom-input>
       </ng-container>
     </ion-list>

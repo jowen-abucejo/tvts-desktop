@@ -135,6 +135,20 @@ export class HomePage implements OnInit {
     });
   }
 
+  reloadPage() {
+    this.chart_statistics = {
+      total_tickets: 0,
+      total_violations: 0,
+      violations: [],
+      count_per_violations: [],
+      offenses_and_violators: [],
+    };
+    this.page_data;
+    this.latest_violations;
+    this.isTicketCountLoaded = false;
+    this.ngOnInit();
+  }
+
   showRecentRecordsTally() {
     this.chart_statistics.total_tickets = this.rows.length; //total tickets in chart
     this.chart_statistics.violations = this.latest_violations;

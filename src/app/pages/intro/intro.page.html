@@ -1,14 +1,15 @@
 <ion-content fullscreen class="ion-padding" scroll-y="false">
   <ion-slides pager="true">
     <ion-slide>
-      <!-- <div class="slide"> -->
       <img src="../../../assets/slide-1.png" />
       <h2>Welcome to Traffic Violation Ticketing System</h2>
       <p>
         No physical citation tickets needed. <b>QR Code</b> is generated
         instead.
       </p>
-      <!-- </div> -->
+      <ion-button fill="clear" (click)="slideNext()"
+        >Next <ion-icon slot="end" name="caret-forward"></ion-icon
+      ></ion-button>
     </ion-slide>
 
     <ion-slide>
@@ -17,12 +18,21 @@
       <p>
         <b>All records</b> are accessible online and synchronized in real-time.
       </p>
+      <ion-button fill="clear" (click)="slidePrev()"
+        >Previous <ion-icon slot="start" name="caret-back"></ion-icon
+      ></ion-button>
+      <ion-button fill="clear" (click)="slideNext()"
+        >Next <ion-icon slot="end" name="caret-forward"></ion-icon
+      ></ion-button>
     </ion-slide>
 
     <ion-slide>
       <img src="../../../assets/slide-3.png" />
       <h2>Real-time Notifications</h2>
       <p>Provide <b>SMS and email notifications</b> as the ticket is issued</p>
+      <ion-button fill="clear" (click)="slidePrev()"
+        >Previous <ion-icon slot="start" name="caret-back"></ion-icon
+      ></ion-button>
       <ion-button fill="clear" (click)="goToLogin()"
         >Continue <ion-icon slot="end" name="arrow-forward"></ion-icon
       ></ion-button>

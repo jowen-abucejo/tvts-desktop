@@ -116,7 +116,10 @@ export class UtilityService {
     );
     if (response.status === 401 && re_login) {
       await this.alertReLogin(reload_page);
-    } else if (response.status === 401 && !re_login) {
+    } else if (
+      (response.status === 401 && !re_login) ||
+      response.status === 400
+    ) {
       const alert = await this.alertMessage(
         response.error.error,
         response.error.message

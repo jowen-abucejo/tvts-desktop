@@ -9,22 +9,23 @@ import { ViewDidLeave } from '@ionic/angular';
 
 import { ApiService } from 'src/app/services/api.service';
 import { UtilityService } from 'src/app/services/utility.service';
-
 @Component({
-  selector: 'app-form-modal',
-  templateUrl: './form-modal.component.html',
-  styleUrls: ['./form-modal.component.scss'],
+  selector: 'app-ticket-form-modal',
+  templateUrl: './ticket-form-modal.component.html',
+  styleUrls: ['./ticket-form-modal.component.scss'],
 })
-export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
+export class TicketFormModalComponent
+  implements OnInit, OnDestroy, ViewDidLeave
+{
   @Input() title: string = '';
   @Input() new_ticket: boolean = false;
   @Input() update_ticket: boolean = false;
   @Input() ticket_id: number = 0;
   @Input() modalCtrl: ModalController;
-  @Input() newFormGroup: FormGroup;
   @Input() searched_violator: any = null;
   @Input() searched_ticket: any = null;
   @Input() violations = {};
+  @Input() users = [];
   @Input() ticketFormGroup: FormGroup;
 
   private loading: HTMLIonLoadingElement;
@@ -77,6 +78,126 @@ export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
       this.images = null;
     }
     this.ticketFormGroup = null;
+  }
+
+  attachExtraProperties() {
+    this.extra_inputs.ext_violators = { data: [] };
+    this.extra_inputs.ext_tickets = { data: [] };
+    //fetch extra details needed for violator
+    this.searched_ticket.violator.extra_properties.forEach((extra_input) => {
+      const prop_name = extra_input.propertyDescription.property;
+      const value =
+        extra_input.property_value != 'null' &&
+        extra_input.propertyDescription.data_type != 'image'
+          ? extra_input.property_value
+          : '';
+      this.ticketFormGroup.addControl(
+        prop_name,
+        new FormControl(
+          value,
+          extra_input.is_required ? Validators.required : []
+        )
+      );
+      this.extra_inputs.ext_violators.data.push(
+        extra_input.propertyDescription
+      );
+    });
+    this.searched_ticket.extra_properties.forEach((extra_input) => {
+      const prop_name = extra_input.propertyDescription.property;
+      const value =
+        extra_input.property_value != 'null' &&
+        extra_input.propertyDescription.data_type != 'image'
+          ? extra_input.property_value
+          : '';
+      this.ticketFormGroup.addControl(
+        prop_name,
+        new FormControl(
+          value,
+          extra_input.is_required ? Validators.required : []
+        )
+      );
+      this.extra_inputs.ext_tickets.data.push(extra_input.propertyDescription);
+    });
+
+    this.formReady = true;
+  }
+
+  //change list of violations on change of vehicle type
+  changeSelectViolations(clearSelected: boolean = true, vehicle_type = null) {
+    this.selectViolations = [];
+    vehicle_type = clearSelected
+      ? this.ticketFormGroup.get('vehicle_type').value
+      : vehicle_type;
+    for (let type = 0; type < this.violations[vehicle_type].length; type++) {
+      const v = this.violations[vehicle_type][type];
+      for (let violation = 0; violation < v.violations.length; violation++) {
+        this.selectViolations.push(v.violations[violation]);
+      }
+    }
+    if (clearSelected)
+      this.ticketFormGroup.get('committed_violations').setValue(null); //reset value of committed violations
+  }
+
+  closeModal(status: boolean = false) {
+    this.modalCtrl.dismiss({
+      dismissed: true,
+      status: status,
+    });
+  }
+
+  async confirmTicketAction() {
+    const options = {
+      inputs: [
+        {
+          name: 'password',
+          type: 'password',
+          placeholder: 'Enter password',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Continue',
+          cssClass: 'secondary',
+          handler: async (credentials) => {
+            const operation = this.new_ticket
+              ? 'Ticket Creation Failed!'
+              : 'Ticket Update Failed!';
+            if (credentials.password) {
+              const formData = new FormData();
+              formData.append('password', credentials.password);
+              this.apiService.confirmPassword(formData).then(
+                async (data: any) => {
+                  if (data.password_match_status === true) {
+                    //save ticket details
+                    this.saveTicketDetails();
+                  } else {
+                    const alert = await this.utility.alertMessage(
+                      operation,
+                      'You enter an incorrect password. Please try again.'
+                    );
+                    alert.present();
+                  }
+                },
+
+                //show error message
+                async (res) => {
+                  await this.utility.alertErrorStatus(res);
+                }
+              );
+            } else {
+              const alert = await this.utility.alertMessage(operation);
+              alert.present();
+            }
+          },
+        },
+      ],
+    };
+    const alert = await this.utility.alertMessage(
+      'Confirm Password',
+      '',
+      options
+    );
+    await alert.present();
   }
 
   fetchExtraProperties() {
@@ -138,71 +259,12 @@ export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
     this.formReady = true;
   }
 
-  async createTicket() {
-    //create form data to send on api server
-    this.formData = new FormData();
-    for (const key in this.ticketFormGroup.value) {
-      this.formData.append(key, this.ticketFormGroup.get(key).value);
-    }
-    if (this.searched_violator && this.searched_violator.id)
-      this.formData.append('violator_id', this.searched_violator.id);
-    //prompt user to enter password
-    await this.confirmCreateTicket();
-  }
-
-  async confirmCreateTicket() {
-    const options = {
-      inputs: [
-        {
-          name: 'password',
-          type: 'password',
-          placeholder: 'Enter password',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Continue',
-          cssClass: 'secondary',
-          handler: async (credentials) => {
-            const operation = this.new_ticket
-              ? 'Ticket Creation Failed!'
-              : 'Ticket Update Failed!';
-            if (credentials.password) {
-              const formData = new FormData();
-              formData.append('password', credentials.password);
-              this.apiService.confirmPassword(formData).then(
-                async (data: any) => {
-                  if (data.password_match_status === true) {
-                    //save ticket details
-                    this.saveTicketDetails();
-                  } else {
-                    const alert = await this.utility.alertMessage(
-                      operation,
-                      'You enter an incorrect password. Please try again.'
-                    );
-                    alert.present();
-                  }
-                },
-
-                //show error message
-                async (res) => {
-                  await this.utility.alertErrorStatus(res);
-                }
-              );
-            } else {
-              const alert = await this.utility.alertMessage(operation);
-              alert.present();
-            }
-          },
-        },
-      ],
-    };
-    const alert = await this.utility.alertMessage(
-      'Confirm Password',
-      '',
-      options
-    );
-    await alert.present();
+  //listen to custom components when it returns an image to be appended in form before submission
+  async pushImage(image: imageFile) {
+    let resp = await fetch(image.data);
+    let blob = await resp.blob();
+    this.ticketFormGroup.get(image.property_name).setValue(blob);
+    this.images.push(image);
   }
 
   //save ticket details to server
@@ -218,7 +280,7 @@ export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
             const alert = await this.utility.alertMessage(
               'Ticket Created Successfully!'
             );
-            this.closeModal();
+            this.closeModal(true);
             return await alert.present();
           },
           //show error message
@@ -240,7 +302,7 @@ export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
             const alert = await this.utility.alertMessage(
               'Ticket Updated Successfully!'
             );
-            this.closeModal();
+            this.closeModal(true);
             return await alert.present();
           },
           //show error message
@@ -254,81 +316,22 @@ export class FormModalComponent implements OnInit, OnDestroy, ViewDidLeave {
     }
   }
 
-  //change list of violations on change of vehicle type
-  changeSelectViolations(clearSelected: boolean = true, vehicle_type = null) {
-    this.selectViolations = [];
-    vehicle_type = clearSelected
-      ? this.ticketFormGroup.get('vehicle_type').value
-      : vehicle_type;
-    for (let type = 0; type < this.violations[vehicle_type].length; type++) {
-      const v = this.violations[vehicle_type][type];
-      for (let violation = 0; violation < v.violations.length; violation++) {
-        this.selectViolations.push(v.violations[violation]);
-      }
+  async startTicketAction() {
+    //create form data to send on api server
+    this.formData = new FormData();
+    for (const key in this.ticketFormGroup.value) {
+      this.formData.append(key, this.ticketFormGroup.get(key).value);
     }
-    if (clearSelected)
-      this.ticketFormGroup.get('committed_violations').setValue(null); //reset value of committed violations
+    if (this.searched_violator && this.searched_violator.id)
+      this.formData.append('violator_id', this.searched_violator.id);
+    //prompt user to enter password
+    await this.confirmTicketAction();
   }
 
-  //helper function to change values of form controls with boolean type
+  //function to change values of form controls with boolean type
   toggleValue(formCtrlName: string) {
     const vI = this.ticketFormGroup.get(formCtrlName);
     vI.setValue(!vI.value);
-  }
-
-  //listen to custom components when it returns an image to be appended in form before submission
-  async pushImage(image: imageFile) {
-    let resp = await fetch(image.data);
-    let blob = await resp.blob();
-    this.ticketFormGroup.get(image.property_name).setValue(blob);
-    this.images.push(image);
-  }
-
-  closeModal() {
-    this.modalCtrl.dismiss({
-      dismissed: true,
-    });
-  }
-
-  attachExtraProperties() {
-    this.extra_inputs.ext_violators = { data: [] };
-    this.extra_inputs.ext_tickets = { data: [] };
-    //fetch extra details needed for violator
-    this.searched_ticket.violator.extra_properties.forEach((extra_input) => {
-      const prop_name = extra_input.propertyDescription.property;
-      const value =
-        extra_input.property_value != 'null' &&
-        extra_input.propertyDescription.data_type != 'image'
-          ? extra_input.property_value
-          : '';
-      this.ticketFormGroup.addControl(
-        prop_name,
-        new FormControl(
-          value,
-          extra_input.is_required ? Validators.required : []
-        )
-      );
-      this.extra_inputs.ext_violators.data.push(
-        extra_input.propertyDescription
-      );
-    });
-    this.searched_ticket.extra_properties.forEach((extra_input) => {
-      const prop_name = extra_input.propertyDescription.property;
-      const value =
-        extra_input.property_value != 'null' &&
-        extra_input.propertyDescription.data_type != 'image'
-          ? extra_input.property_value
-          : '';
-      this.ticketFormGroup.addControl(
-        prop_name,
-        new FormControl(
-          value,
-          extra_input.is_required ? Validators.required : []
-        )
-      );
-      this.extra_inputs.ext_tickets.data.push(extra_input.propertyDescription);
-    });
-
-    this.formReady = true;
+    vI.markAsDirty();
   }
 }

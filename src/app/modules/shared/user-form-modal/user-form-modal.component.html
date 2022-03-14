@@ -1,0 +1,86 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()"
+        ><ion-icon name="close"></ion-icon
+      ></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" *ngIf="new_user || update_user">
+  <form [formGroup]="userFormGroup" (ngSubmit)="startUserAction()">
+    <ion-list>
+      <ion-list-header color="light">
+        <ion-label color="dark">ACCOUNT DETAILS</ion-label>
+      </ion-list-header>
+      <ion-item>
+        <ion-label>Full Name</ion-label>
+        <ion-input
+          formControlName="name"
+          placeholder="Enter code for user"
+        ></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Username</ion-label>
+        <ion-input
+          [disabled]="update_user"
+          formControlName="username"
+          placeholder="Default username/password is full name in lower case without spaces."
+        ></ion-input>
+      </ion-item>
+
+      <ion-radio-group formControlName="user_type">
+        <ion-item lines="full">
+          <ion-label>Account Type</ion-label>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">ADMIN</ion-label>
+          <ion-radio slot="start" value="admin"></ion-radio>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">TREASURY</ion-label>
+          <ion-radio slot="start" value="treasury"></ion-radio>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">DEPUTY OFFICER</ion-label>
+          <ion-radio slot="start" value="deputy officer"></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+    </ion-list>
+    <ion-button
+      *ngIf="new_user"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="!userFormGroup.valid"
+    >
+      Create
+    </ion-button>
+    <ion-button
+      *ngIf="update_user"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="userFormGroup.pristine || !userFormGroup.valid"
+    >
+      Update
+    </ion-button>
+  </form>
+  <ion-button
+    *ngIf="update_user"
+    type="button"
+    expand="block"
+    fill="outline"
+    class="ion-margin"
+    (click)="confirmUserAction(true)"
+  >
+    Reset Login Credentials
+  </ion-button>
+</ion-content>

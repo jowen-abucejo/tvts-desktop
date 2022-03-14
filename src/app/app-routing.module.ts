@@ -57,11 +57,34 @@ const routes: Routes = [
         (m) => m.ViolationsPageModule
       ),
     canLoad: [AuthGuard],
-  },  {
-    path: 'blank',
-    loadChildren: () => import('./pages/blank/blank.module').then( m => m.BlankPageModule)
   },
-
+  {
+    path: 'blank',
+    loadChildren: () =>
+      import('./pages/blank/blank.module').then((m) => m.BlankPageModule),
+  },
+  {
+    path: 'payments',
+    loadChildren: () =>
+      import('./pages/payments/payments.module').then(
+        (m) => m.PaymentsPageModule
+      ),
+    canLoad: [AuthGuard],
+  },
+  {
+    path: 'users',
+    loadChildren: () =>
+      import('./pages/users/users.module').then((m) => m.UsersPageModule),
+    canLoad: [AuthGuard],
+  },
+  {
+    path: 'ticket-inputs',
+    loadChildren: () =>
+      import('./pages/ticket-inputs/ticket-inputs.module').then(
+        (m) => m.TicketInputsPageModule
+      ),
+    canLoad: [AuthGuard],
+  },
 ];
 
 @NgModule({

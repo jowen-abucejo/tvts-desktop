@@ -54,7 +54,7 @@ export class SettingsPage implements OnInit, ViewDidLeave {
     const api_domain = this.apiConfigFormGroup.get('apiDomainCtrl');
     const api_version = this.apiConfigFormGroup.get('apiVersionCtrl');
     this.config
-      .configureApiDomain(api_domain.value, api_version.value, false)
+      .configureApiDomain(api_domain.value, api_version.value, true)
       .then(
         async () => {
           this.auth.api.next({

@@ -5,20 +5,35 @@ import { AuthenticationService } from './authentication.service';
 export const API_KEY = '_api';
 export const SU_KEY = '_su';
 export const API_URL = {
+  GET_USERS: `users`,
+  STORE_USER_DETAILS: `users/new`,
+  GET_ONE_USER: `users/user`,
   REQUEST_TOKEN: `users/user/login`,
   REQUEST_LOGOUT: `users/user/logout`,
   CONFIRM_PASSWORD: `users/user/confirm-password`,
+  UPDATE_USER: `users/user`,
+
+  GET_VIOLATIONS: `violations`,
+  STORE_VIOLATION_DETAILS: `violations/new`,
+  GET_ONE_VIOLATION: `violations/violation`,
   GROUPED_VIOLATIONS_AND_VEHICLE_TYPES: `violations/types/by-vehicle-types`,
+
   GET_ONE_VIOLATOR: `violators/violator`,
+
+  GET_TICKETS: `tickets`,
   STORE_TICKET_DETAILS: `tickets/new`,
   GET_ONE_TICKET: `tickets/ticket`,
-  GET_TICKETS: `tickets`,
   GET_TICKET_COUNT_BY_DATE: `tickets/count/by-date`,
-  GET_EXTRA_INPUTS: `forms/ext/fields`,
-  UPDATE_USER: `users/user`,
   EMAIL_QRCODE: `tickets/email-qr`,
+
+  GET_EXTRA_INPUTS: `forms/ext/input/fields`,
+  GET_ONE_EXTRA_INPUT: `forms/ext/input/field`,
+
   GET_IMAGE: `resources/image`,
-  GET_VIOLATIONS: `violations`,
+
+  GET_PAYMENTS: `payments`,
+  STORE_PAYMENT_DETAILS: `payments/new`,
+  GET_ONE_PAYMENT: `payments/payment`,
 };
 @Injectable({
   providedIn: 'root',
@@ -90,6 +105,7 @@ export class ApiService {
    * @returns Returns a promise that resolves with an object of ticket details
    */
   getTicketDetails(ticket_number: any) {
+    ticket_number = encodeURIComponent(ticket_number);
     return this.http
       .get(
         `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_TICKET}/${ticket_number}`,
@@ -126,7 +142,7 @@ export class ApiService {
             page,
             limit,
             order,
-            search,
+            search: encodeURIComponent(search),
             start_date: date_range ? date_range[0] : '',
             end_date: date_range ? date_range[1] : '',
             max_fetch_date,
@@ -161,19 +177,28 @@ export class ApiService {
   /**
    * Get all extra inputs to display in form
    * @param target the owner('violator' or 'ticket') of extra properties represented by all extra inputs
+   * @param search the keyword to search
    * @returns Returns a promise that resolves with an object consist of extra inputs' description
    */
-  getExtraInputs(target: string) {
+  getExtraInputs(target: string = null, search: string = '') {
+    let url = target
+      ? `${this.api.domain}/api/${this.api.version}/${API_URL.GET_EXTRA_INPUTS}/${target}`
+      : `${this.api.domain}/api/${this.api.version}/${API_URL.GET_EXTRA_INPUTS}`;
     return this.http
-      .get(
-        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_EXTRA_INPUTS}/${target}`,
-        {
-          headers: this.auth.createHeaderWithToken(),
-        }
-      )
+      .get(url, {
+        headers: this.auth.createHeaderWithToken(),
+        params: {
+          search: encodeURIComponent(search),
+        },
+      })
       .toPromise();
   }
 
+  /**
+   *
+   * @param formData updated username and password, new password confirmation and the current password for the current user account
+   * @returns Returns a promise with the status if update is successful or not
+   */
   updateAccount(formData: FormData) {
     return this.http
       .post(
@@ -186,6 +211,12 @@ export class ApiService {
       .toPromise();
   }
 
+  /**
+   *
+   * @param ticket_number the ticket number of generated image
+   * @param qr_image the generated citation ticket
+   * @returns Returns a promise with the status if ticket is emailed successfully
+   */
   sendQRToEmail(ticket_number: any, qr_image: FormData) {
     return this.http
       .post(
@@ -198,6 +229,11 @@ export class ApiService {
       .toPromise();
   }
 
+  /**
+   *
+   * @param password the password to be matched with the current user account
+   * @returns Returns a promise with the result if password is matched to the account
+   */
   confirmPassword(password: FormData) {
     return this.http
       .post(
@@ -210,6 +246,11 @@ export class ApiService {
       .toPromise();
   }
 
+  /**
+   *
+   * @param url the path of the requested image
+   * @returns Returns a promise with blob of the requested image
+   */
   requestImage(url) {
     return this.http
       .get(
@@ -232,7 +273,7 @@ export class ApiService {
             page,
             limit,
             order,
-            search,
+            search: encodeURIComponent(search),
           },
         }
       )
@@ -267,6 +308,303 @@ export class ApiService {
     return this.http
       .post(
         `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATOR}/${violator_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  deleteTicket(ticket_id: number) {
+    return this.http
+      .delete(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_TICKET}/delete/${ticket_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          body: { _method: 'DELETE' },
+        }
+      )
+      .toPromise();
+  }
+
+  deleteViolation(violation_id: number, violation_type_id: number) {
+    return this.http
+      .delete(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATION}/delete/${violation_id}/${violation_type_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          body: { _method: 'DELETE' },
+        }
+      )
+      .toPromise();
+  }
+
+  toggleViolationStatus(violation_id: number, violation_type_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATION}/toggle/${violation_id}/${violation_type_id}`,
+        { _method: 'PATCH' },
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  getViolationDetails(violation_id: number, violation_type_id: number) {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATION}/${violation_id}/${violation_type_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Create record of violation with the given details
+   * @param {FormData} details details about the violation
+   * @returns Returns a promise with an object of the created violation
+   */
+  saveViolation(details: FormData) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.STORE_VIOLATION_DETAILS}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  updateViolation(details: FormData, violation_id: number, violation_type_id) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_VIOLATION}/${violation_id}/${violation_type_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  getPayments(
+    page: number = 1,
+    limit: number = 10,
+    order: string = 'ASC',
+    search: string = '',
+    date_range = null,
+    max_fetch_date: any = '',
+    max_date_paginated: any = ''
+  ) {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_PAYMENTS}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          params: {
+            page,
+            limit,
+            order,
+            search: encodeURIComponent(search),
+            start_date: date_range ? date_range[0] : '',
+            end_date: date_range ? date_range[1] : '',
+            max_fetch_date,
+            max_date_paginated,
+          },
+        }
+      )
+      .toPromise();
+  }
+
+  getPaymentDetails(payment_id: number) {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_PAYMENT}/${payment_id}}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  deletePayment(payment_id: number) {
+    return this.http
+      .delete(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_PAYMENT}/delete/${payment_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          body: { _method: 'DELETE' },
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Create record of payment with the given details
+   * @param {FormData} details details about the payment
+   * @returns Returns a promise with an object of the created payment
+   */
+  savePayment(details: FormData) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.STORE_PAYMENT_DETAILS}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  updatePayment(details: FormData, payment_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_PAYMENT}/${payment_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  getUserAccounts(
+    page = 1,
+    limit = 10,
+    order = 'ASC',
+    search = '',
+    fetch_all: boolean = false
+  ) {
+    return this.http
+      .get(`${this.api.domain}/api/${this.api.version}/${API_URL.GET_USERS}`, {
+        headers: this.auth.createHeaderWithToken(),
+        params: {
+          page,
+          limit,
+          order,
+          search: encodeURIComponent(search),
+          fetch_all,
+        },
+      })
+      .toPromise();
+  }
+
+  deleteUserAccount(payment_id: number, permanentDelete: boolean = false) {
+    return this.http
+      .delete(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_USER}/delete/${payment_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          body: { _method: 'DELETE', permanentDelete: permanentDelete },
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Create record of user with the given details
+   * @param {FormData} details details about the user
+   * @returns Returns a promise with an object of the created user
+   */
+  saveUserAccount(details: FormData) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.STORE_USER_DETAILS}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  updateUserAccount(details: FormData, user_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_USER}/${user_id}`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  resetUserAccountLogin(user_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_USERS}/reset/${user_id}`,
+        { _method: 'PUT' },
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  getUserAccountDetails(user_id: number) {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_USER}/${user_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  getExtraInputDetails(extra_input_id: number) {
+    return this.http
+      .get(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_EXTRA_INPUT}/${extra_input_id}}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  deleteExtraInput(
+    extra_property_id: number,
+    permanentDelete: boolean = false
+  ) {
+    return this.http
+      .delete(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_EXTRA_INPUT}/delete/${extra_property_id}`,
+        {
+          headers: this.auth.createHeaderWithToken(),
+          body: { _method: 'DELETE', permanentDelete: permanentDelete },
+        }
+      )
+      .toPromise();
+  }
+
+  /**
+   * Create record of extra input field with the given details
+   * @param {FormData} details details about the extra input field
+   * @returns Returns a promise with an object of the created extra input field
+   */
+  saveExtraInputDetails(details: FormData) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_EXTRA_INPUT}/new`,
+        details,
+        {
+          headers: this.auth.createHeaderWithToken(),
+        }
+      )
+      .toPromise();
+  }
+
+  updateExtraInput(details: FormData, extra_input_id: number) {
+    return this.http
+      .post(
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_EXTRA_INPUT}/${extra_input_id}`,
         details,
         {
           headers: this.auth.createHeaderWithToken(),

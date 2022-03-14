@@ -3,9 +3,9 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Violations</ion-title>
+    <ion-title>Payments</ion-title>
     <ion-searchbar
-      placeholder="Search"
+      placeholder="Search ticket number or OR number"
       showCancelButton="focus"
       animated="true"
       slot="secondary"
@@ -61,12 +61,12 @@
     </ion-buttons>
     <ion-buttons slot="end">
       <ion-button
-        (click)="showViolationFormModal()"
+        (click)="promptTicketSearch()"
         fill="solid"
         size="small"
         color="primary"
         [disabled]="isSearching"
-        ><ion-icon name="create-outline" slot="start"></ion-icon>NEW VIOLATION
+        ><ion-icon name="create-outline" slot="start"></ion-icon>NEW PAYMENT
       </ion-button>
       <ion-button (click)="reloadPage()" title="Refresh">
         <ion-icon slot="end" name="refresh-outline"></ion-icon>
@@ -75,11 +75,11 @@
   </ion-toolbar>
 </ion-header>
 <ion-content scrollY="false" class="ion-padding">
-  <ion-content id="violationTable" scrollX="true" #tableContent>
+  <ion-content id="paymentTable" scrollX="true" #tableContent>
     <div
       style="width: 100%; height: 100%; display: flex; flex-direction: column"
       class="ion-align-items-center ion-justify-content-center"
-      *ngIf="!isViolationsLoaded"
+      *ngIf="!isPaymentsLoaded"
     >
       <ion-spinner
         name="bubbles"
@@ -89,7 +89,7 @@
       <span class="ion-padding-top">Please wait...</span>
     </div>
     <table
-      *ngIf="isViolationsLoaded"
+      *ngIf="isPaymentsLoaded"
       datatable
       [dtOptions]="dtOptions"
       class="table table-hover table-striped table-bordered"
@@ -98,12 +98,11 @@
       <thead>
         <tr>
           <th>ID</th>
-          <th>CODE</th>
-          <th>VIOLATION</th>
-          <th>TYPE</th>
-          <th>VEHICLE TYPE</th>
+          <th>TICKET #</th>
+          <th>O.R. NUMBER</th>
+          <th>DATE & TIME</th>
           <th>PENALTIES</th>
-          <th>ACTIVE</th>
+          <th>TOTAL AMOUNT</th>
         </tr>
       </thead>
       <tbody (contextmenu)="showRowContextMenu($event)">
@@ -115,7 +114,7 @@
     <ion-infinite-scroll
       threshold="2%"
       (ionInfinite)="loadData($event)"
-      *ngIf="isViolationsLoaded"
+      *ngIf="isPaymentsLoaded"
     >
       <ion-infinite-scroll-content
         loadingSpinner="bubbles"

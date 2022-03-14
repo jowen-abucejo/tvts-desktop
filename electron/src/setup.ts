@@ -118,7 +118,7 @@ export class ElectronCapacitorApp {
       )
     );
     this.mainWindowState = windowStateKeeper({
-      defaultWidth: 1000,
+      defaultWidth: 800,
       defaultHeight: 800,
     });
     // Setup preload script path and construct our main window.
@@ -126,21 +126,30 @@ export class ElectronCapacitorApp {
     this.MainWindow = new BrowserWindow({
       icon,
       show: false,
-      x: this.mainWindowState.x,
-      y: this.mainWindowState.y,
-      // width: this.mainWindowState.width,
-      // height: this.mainWindowState.height,
+      paintWhenInitiallyHidden: false,
+      // transparent: true,
+      // x: this.mainWindowState.x,
+      // y: this.mainWindowState.y,
+      width: this.mainWindowState.width,
+      height: this.mainWindowState.height,
       webPreferences: {
+        devTools: false,
         nodeIntegration: true,
         contextIsolation: true,
         // Use preload to inject the electron varriant overrides for capacitor plugins.
         // preload: join(app.getAppPath(), "node_modules", "@capacitor-community", "electron", "dist", "runtime", "electron-rt.js"),
         preload: preloadPath,
       },
+      minWidth: 500,
+      minHeight: 500,
     });
 
-    this.MainWindow.maximize(); //!maximize window
-    this.mainWindowState.manage(this.MainWindow);
+    this.MainWindow.hide();
+    this.MainWindow.setResizable(true);
+    this.MainWindow.setMaximizable(true);
+    this.MainWindow.setMinimizable(true);
+    this.MainWindow.setFullScreenable(true);
+    // this.mainWindowState.manage(this.MainWindow);
 
     if (this.CapacitorFileConfig.backgroundColor) {
       this.MainWindow.setBackgroundColor(
@@ -232,7 +241,7 @@ export class ElectronCapacitorApp {
       if (this.CapacitorFileConfig.electron?.splashScreenEnabled) {
         this.SplashScreen.getSplashWindow().hide();
       }
-      if (!this.CapacitorFileConfig.electron?.hideMainWindowOnLaunch) {
+      if (this.CapacitorFileConfig.electron?.hideMainWindowOnLaunch) {
         this.MainWindow.show();
       }
       setTimeout(() => {

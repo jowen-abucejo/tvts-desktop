@@ -43,6 +43,7 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
   @Input() disabled: boolean = false;
   @Output() toggleEvent = new EventEmitter<string>();
   @Output() imageCaptureEvent = new EventEmitter<imageFile>();
+  @Input() required_field: boolean = false;
 
   input_types_cast = ['text', 'email'];
   imageData: any;

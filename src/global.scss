@@ -32,17 +32,27 @@ ion-icon {
   pointer-events: none;
 }
 
-.sc-ion-alert-md.alert-checkbox-label {
+.sc-ion-alert-md.alert-checkbox-label,
+.sc-ion-alert-md.alert-radio-label {
   white-space: normal !important;
 }
 .alert-violation-selection {
   --width: 90%;
 }
-
+.alert-tappable.sc-ion-alert-md {
+  height: initial !important;
+  contain: initial !important;
+}
 .alert-checkbox-button-disabled.sc-ion-alert-md
   .alert-button-inner.sc-ion-alert-md {
   opacity: 1;
 }
+
+ion-label.required-field::after {
+  content: "*";
+  color: var(--ion-color-danger);
+}
+
 table.dataTable {
   margin-top: 0 !important;
 }

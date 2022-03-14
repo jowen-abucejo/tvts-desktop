@@ -1,0 +1,184 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()"
+        ><ion-icon name="close"></ion-icon
+      ></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" *ngIf="new_extra_input || update_extra_input">
+  <form [formGroup]="extraInputFormGroup" (ngSubmit)="startExtraInputAction()">
+    <ion-list>
+      <ion-list-header color="light">
+        <ion-label color="dark">TICKET INPUT DETAILS</ion-label>
+      </ion-list-header>
+      <ion-item>
+        <ion-label>Label/Text</ion-label>
+        <ion-input
+          formControlName="text_label"
+          placeholder="Enter short label that describe this input field"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item-group>
+        <ion-item-divider>
+          <ion-label color="primary">Data Type</ion-label>
+        </ion-item-divider>
+
+        <ion-radio-group formControlName="data_type">
+          <ion-item *ngFor="let item of data_types | keyvalue">
+            <ion-label color="dark">{{ item.value }}</ion-label>
+            <ion-radio
+              slot="start"
+              value="{{ item.key }}"
+              [disabled]="disabled_field"
+            ></ion-radio>
+          </ion-item>
+        </ion-radio-group>
+
+        <ion-item-divider *ngIf="show_additional_fields">
+          <ion-label color="primary"
+            >Options <small>(At least 2 options is required)</small></ion-label
+          >
+        </ion-item-divider>
+
+        <ng-container *ngIf="show_additional_fields">
+          <ion-item
+            *ngFor="
+              let item of extraInputFormGroup.controls.options.controls;
+              let i = index
+            "
+            lines="inset"
+            class="ion-margin-horizontal"
+          >
+            <ion-input type="text" [formControl]="item"></ion-input>
+            <ion-button *ngIf="i > 1" (click)="deleteOption(i)" fill="clear">
+              <ion-icon
+                slot="end"
+                name="trash"
+                color="danger"
+                title="Delete"
+              ></ion-icon>
+            </ion-button>
+          </ion-item>
+          <ion-button
+            (click)="addOption()"
+            fill="outline"
+            expand="block"
+            class="ion-margin-horizontal"
+          >
+            <ion-icon slot="start" name="add" color="primary"></ion-icon>
+            Add New Option
+          </ion-button>
+        </ng-container>
+        <ion-radio-group
+          formControlName="is_multiple_select"
+          *ngIf="show_additional_fields"
+        >
+          <ion-item lines="full">
+            <ion-label>Allow multiple options to be selected?</ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-label color="dark">YES</ion-label>
+            <ion-radio
+              slot="start"
+              value="true"
+              [disabled]="disabled_field"
+            ></ion-radio>
+          </ion-item>
+
+          <ion-item>
+            <ion-label color="dark">NO</ion-label>
+            <ion-radio
+              slot="start"
+              value="false"
+              [disabled]="disabled_field"
+            ></ion-radio>
+          </ion-item>
+        </ion-radio-group>
+      </ion-item-group>
+
+      <ion-radio-group formControlName="property_owner">
+        <ion-item lines="full">
+          <ion-label>Place in What Subsection</ion-label>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">DRIVER'S DETAILS</ion-label>
+          <ion-radio
+            slot="start"
+            value="violator"
+            [disabled]="disabled_field"
+          ></ion-radio>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">TRAFFIC RELATED VIOLATION</ion-label>
+          <ion-radio
+            slot="start"
+            value="ticket"
+            [disabled]="disabled_field"
+          ></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+      <ion-item>
+        <ion-label>Display Order/Priority #</ion-label>
+        <ion-input
+          type="number"
+          step="1"
+          min="1"
+          max="1000"
+          formControlName="order_in_form"
+          class="ion-text-right ion-padding-end"
+        ></ion-input>
+      </ion-item>
+
+      <ion-radio-group formControlName="is_required">
+        <ion-item lines="full">
+          <ion-label
+            >Required?
+            <small
+              >If set as required, ticket can't be submitted if this input field
+              is empty/blank</small
+            ></ion-label
+          >
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">YES</ion-label>
+          <ion-radio slot="start" value="true"></ion-radio>
+        </ion-item>
+
+        <ion-item>
+          <ion-label color="dark">NO</ion-label>
+          <ion-radio slot="start" value="false"></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+    </ion-list>
+
+    <ion-button
+      *ngIf="new_extra_input"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="!extraInputFormGroup.valid"
+    >
+      Create
+    </ion-button>
+    <ion-button
+      *ngIf="update_extra_input"
+      type="submit"
+      expand="block"
+      fill="solid"
+      class="ion-margin"
+      [disabled]="extraInputFormGroup.pristine || !extraInputFormGroup.valid"
+    >
+      Update
+    </ion-button>
+  </form>
+</ion-content>

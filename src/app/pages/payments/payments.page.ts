@@ -1,13 +1,5 @@
+import { formatDate } from '@angular/common';
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { ApiService } from '../../services/api.service';
-import { DataTableDirective } from 'angular-datatables';
-import {
-  IonContent,
-  MenuController,
-  ModalController,
-  PopoverController,
-  ViewWillLeave,
-} from '@ionic/angular';
 import {
   AbstractControl,
   FormBuilder,
@@ -16,20 +8,29 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { UtilityService } from '../../services/utility.service';
-import { PopoverComponent } from '../../modules/shared/popover/popover.component';
-import { StorageService } from '../../services/storage.service';
+import {
+  IonContent,
+  ModalController,
+  PopoverController,
+  ViewWillLeave,
+} from '@ionic/angular';
+import { DataTableDirective } from 'angular-datatables';
 import { take } from 'rxjs/operators';
-import { formatDate } from '@angular/common';
-import { TicketFormModalComponent } from '../../modules/shared/ticket-form-modal/ticket-form-modal.component';
-
+import { PaymentFormModalComponent } from 'src/app/modules/shared/payment-form-modal/payment-form-modal.component';
+import { PopoverComponent } from '../../modules/shared/popover/popover.component';
+import { ApiService } from '../../services/api.service';
+import { StorageService } from '../../services/storage.service';
+import { UtilityService } from '../../services/utility.service';
 @Component({
-  selector: 'app-tickets',
-  templateUrl: './tickets.page.html',
-  styleUrls: ['./tickets.page.scss'],
+  selector: 'app-payments',
+  templateUrl: './payments.page.html',
+  styleUrls: ['./payments.page.scss'],
 })
-export class TicketsPage implements OnInit, ViewWillLeave {
+export class PaymentsPage implements OnInit, ViewWillLeave {
   hasScrollbar = false;
+  private scannedCode = '';
+  private scanningInterval;
+  private allowScan = true;
 
   // checks if there's a scrollbar when the user resizes the window or zooms in/out
   @HostListener('window:resize', ['$event'])
@@ -37,16 +38,40 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     await this.checkForScrollbar();
   }
 
+  @HostListener('document:keydown', ['$event'])
+  async handleKeyboardEvent(e: KeyboardEvent) {
+    if (!this.allowScan) return;
+    if (this.scanningInterval) clearInterval(this.scanningInterval);
+
+    if (e.code == 'Enter') {
+      if (this.scannedCode) {
+        try {
+          const decoded = JSON.parse(this.scannedCode);
+          const ticket_number = decoded?.number;
+          if (ticket_number) await this.searchTicket(ticket_number);
+          this.scannedCode = '';
+        } catch (e) {}
+        return;
+      }
+    }
+
+    if (e.key != 'Shift') {
+      this.scannedCode += e.key;
+    }
+
+    this.scanningInterval = setInterval(() => (this.scannedCode = ''), 200);
+  }
+
   async ionViewWillLeave(): Promise<void> {
     if (this.toggleModels && this.toggleModels.length > 0)
       await this.storage
-        .set('settings_ticketTableColumns', JSON.stringify(this.toggleModels))
+        .set('settings_paymentTableColumns', JSON.stringify(this.toggleModels))
         .catch((res) => {});
 
     if (this.colReorder && this.colReorder.length > 0)
       await this.storage
         .set(
-          'settings_ticketTableColumnsReorder',
+          'settings_paymentTableColumnsReorder',
           JSON.stringify(this.colReorder)
         )
         .catch((res) => {});
@@ -62,7 +87,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
       this.dateRangeValid('start_date'),
     ]),
   });
-  violatorSearchFormGroup: FormGroup;
+  ticketSearchFormGroup: FormGroup;
 
   current_page: number = 1;
   last_page: number = 1;
@@ -73,10 +98,10 @@ export class TicketsPage implements OnInit, ViewWillLeave {
   private old_last_page = 0;
   private max_fetch_date = formatDate(Date.now(), 'medium', 'en');
   private max_date_paginated = '';
-  isTicketsLoaded = false;
+  isPaymentsLoaded = false;
   isSearching = false;
   isDateFilterApplied = false;
-  toggleModels = [false, true, true, true, true, true, true, true, true, true];
+  toggleModels = [false, true, true, true, true, true];
   colReorder = [];
   cachedColReorder = [];
 
@@ -89,7 +114,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     ordering: true,
     colReorder: true,
     order: [
-      [5, 'desc'],
+      [3, 'desc'],
       [0, 'desc'],
     ],
     autoWidth: true,
@@ -135,16 +160,15 @@ export class TicketsPage implements OnInit, ViewWillLeave {
         targets: [0],
         visible: false,
       },
-      { targets: [1, 2, 3, 8], searchable: true },
+      { targets: [1, 2], searchable: true },
       { targets: '_all', searchable: false, visible: true },
-      { targets: [9], className: 'dynamic-text-alignment ion-padding-right' },
+      { targets: [5], className: 'dynamic-text-alignment ion-padding-right' },
     ],
   };
   /*table structure END*/
 
   constructor(
     private apiService: ApiService,
-    // private menuController: MenuController,
     private utility: UtilityService,
     private popoverController: PopoverController,
     private storage: StorageService,
@@ -187,16 +211,16 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     this.last_page = 0;
 
     //fetch initial data from server with the given date range and redraw table
-    const tickets = await this.fetchTickets(1, 50, 'DESC', '', range);
-    if (tickets && tickets.data) {
-      this.current_page = tickets.meta.current_page;
-      this.last_page = tickets.meta.last_page;
-      let new_data = tickets.data;
+    const payments = await this.fetchPayments(1, 50, 'DESC', '', range);
+    if (payments && payments.data) {
+      this.current_page = payments.meta.current_page;
+      this.last_page = payments.meta.last_page;
+      let new_data = payments.data;
       let new_rows = this.formatTableData(new_data);
       this.addNewTableData(new_rows);
     }
 
-    //keep fetching all matched tickets
+    //keep fetching all matched payments
     while (this.current_page < this.last_page) {
       await this.loadData(null, 50, 'DESC', range);
     }
@@ -233,7 +257,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     return;
   }
 
-  async confirmDeleteTicket(ticket_id: number, ticket_number: string) {
+  async confirmDeleteTicket(payment_id: number) {
     const options = {
       inputs: [
         {
@@ -247,15 +271,15 @@ export class TicketsPage implements OnInit, ViewWillLeave {
           text: 'Continue',
           cssClass: 'secondary',
           handler: async (credentials) => {
-            const operation = `Unable to delete ticket ${ticket_number}!`;
+            const operation = `Unable to delete payment!`;
             if (credentials.password) {
               const formData = new FormData();
               formData.append('password', credentials.password);
               this.apiService.confirmPassword(formData).then(
                 async (data: any) => {
                   if (data.password_match_status === true) {
-                    //delete ticket
-                    await this.deleteTicket(ticket_id);
+                    //delete payment
+                    await this.deletePayment(payment_id);
                   } else {
                     const alert = await this.utility.alertMessage(
                       operation,
@@ -298,10 +322,10 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     };
   }
 
-  async deleteTicket(ticket_id) {
+  async deletePayment(payment_id) {
     const loading = await this.utility.createIonLoading();
     await loading.present();
-    const status = await this.apiService.deleteTicket(ticket_id).then(
+    const status = await this.apiService.deletePayment(payment_id).then(
       (res: any) => {
         return res.deleted;
       },
@@ -311,14 +335,14 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     );
     loading.dismiss();
     const feedback = status
-      ? 'Ticket has been deleted.'
-      : 'Ticket failed to delete.';
+      ? 'Payment has been deleted.'
+      : 'Payment failed to delete.';
     const alert = await this.utility.alertMessage(feedback);
     this.popoverController.dismiss({
       dismissed: true,
       status: status,
     });
-    return await alert.present();
+    await alert.present();
   }
 
   async exportAs(index: number) {
@@ -335,7 +359,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     });
   }
 
-  private async fetchTickets(
+  private async fetchPayments(
     page = 1,
     limit = 10,
     order = 'DESC',
@@ -343,7 +367,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     date_range = null
   ) {
     return this.apiService
-      .getTickets(
+      .getPayments(
         page,
         limit,
         order,
@@ -359,25 +383,15 @@ export class TicketsPage implements OnInit, ViewWillLeave {
   }
 
   private formatTableData(data: any[]) {
-    let n, x;
     let to_add = [];
     data.forEach((e) => {
-      n = `${e.violator.last_name}, ${e.violator.first_name}, ${e.violator.middle_name}`;
-      e.violator.name = n;
-      x = e.violations.map(({ violation }) => violation);
-      let violations = x.join(', ');
-      e.violations = violations;
       let new_row = [
-        (e.id + '').toUpperCase(),
-        (e.number + '').toUpperCase(),
-        e.violator.name.toUpperCase(),
-        (e.violator.license_number + '').toUpperCase(),
-        (e.violations + '').toUpperCase(),
-        (e.apprehension_datetime + '').toUpperCase(),
-        (e.issued_by + '').toUpperCase(),
-        (e.status_text + '').toUpperCase(),
-        e.payment.or_number + '',
-        e.payment.total_amount + '',
+        e.id + '',
+        (e.ticket_number + '').toUpperCase(),
+        e.or_number.toUpperCase(),
+        formatDate(new Date(e.date_of_payment), 'MM-dd-yyyy HH:mm:ss a', 'en'),
+        e.penalties + '',
+        e.total_amount + '',
       ];
       if (this.colReorder && this.colReorder.length > 0) {
         new_row = [
@@ -387,10 +401,6 @@ export class TicketsPage implements OnInit, ViewWillLeave {
           new_row[this.colReorder[3]],
           new_row[this.colReorder[4]],
           new_row[this.colReorder[5]],
-          new_row[this.colReorder[6]],
-          new_row[this.colReorder[7]],
-          new_row[this.colReorder[8]],
-          new_row[this.colReorder[9]],
         ];
       }
       to_add.push(new_row);
@@ -401,18 +411,18 @@ export class TicketsPage implements OnInit, ViewWillLeave {
   private async initialLoadData() {
     this.isSearching = true;
 
-    const tickets = await this.fetchTickets();
-    if (tickets && tickets.data) {
-      let new_data = tickets.data;
-      this.current_page = tickets.meta.current_page;
-      this.last_page = tickets.meta.last_page;
+    const payments = await this.fetchPayments();
+    if (payments && payments.data) {
+      let new_data = payments.data;
+      this.current_page = payments.meta.current_page;
+      this.last_page = payments.meta.last_page;
       this.rows = this.formatTableData(new_data);
     }
 
-    this.isTicketsLoaded = true;
+    this.isPaymentsLoaded = true;
 
     const raw_data_colVis = await this.storage
-      .get('settings_ticketTableColumns')
+      .get('settings_paymentTableColumns')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -421,7 +431,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     this.toggleModels = JSON.parse(raw_data_colVis) ?? this.toggleModels;
 
     const raw_data_colReorder = await this.storage
-      .get('settings_ticketTableColumnsReorder')
+      .get('settings_paymentTableColumnsReorder')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -463,24 +473,24 @@ export class TicketsPage implements OnInit, ViewWillLeave {
 
   async loadData(event = null, limit = 10, order = 'DESC', date_range = null) {
     this.isSearching = true;
-    const tickets = await this.fetchTickets(
+    const payments = await this.fetchPayments(
       this.current_page + 1,
       limit,
       order,
       this.search_phrase,
       date_range
     );
-    if (tickets && (tickets.data || tickets.meta.new_records)) {
-      let new_data = tickets.data;
-      if (tickets.meta.new_records && tickets.meta.new_records.length > 0) {
-        const untracked_records = tickets.meta.new_records;
+    if (payments && (payments.data || payments.meta.new_records)) {
+      let new_data = payments.data;
+      if (payments.meta.new_records && payments.meta.new_records.length > 0) {
+        const untracked_records = payments.meta.new_records;
         this.max_fetch_date = untracked_records[0].apprehension_datetime;
         new_data = new_data.concat(untracked_records);
       }
       if (new_data.length > 0) {
-        this.current_page = tickets.meta.current_page;
-        this.last_page = tickets.meta.last_page;
-        this.max_date_paginated = tickets.meta.max_date_paginated;
+        this.current_page = payments.meta.current_page;
+        this.last_page = payments.meta.last_page;
+        this.max_date_paginated = payments.meta.max_date_paginated;
         let new_rows = this.formatTableData(new_data);
         this.addNewTableData(new_rows);
       }
@@ -563,103 +573,28 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     return await popover.present();
   }
 
-  async promptViolatorSearch(searchByName = false) {
-    if (!searchByName) {
-      this.violatorSearchFormGroup = this.formBuilder.group({
-        license_number: ['', [Validators.required]],
-      });
-    } else {
-      this.violatorSearchFormGroup = this.formBuilder.group({
-        first_name: [
-          '',
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        middle_name: [
-          '',
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ ]*')],
-        ],
-        last_name: [
-          '',
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        birth_date: ['', [Validators.required]],
-      });
-    }
+  async promptTicketSearch() {
+    this.ticketSearchFormGroup = this.formBuilder.group({
+      ticket_number: ['', [Validators.required]],
+    });
 
     const componentProps = {
-      title: searchByName
-        ? 'Enter Violator Details'
-        : "Enter Driver's License Number",
+      title: 'Enter Ticket Number',
       subtitle: '',
       isForm: true,
-      parentFormGroup: this.violatorSearchFormGroup,
-      items: searchByName
-        ? [
-            {
-              label: 'Last Name',
-              label_position: 'floating',
-              input_type: 'text',
-              controller: 'last_name',
-              placeholder: 'Enter last name',
-            },
-            {
-              label: 'First Name',
-              label_position: 'floating',
-              input_type: 'text',
-              controller: 'first_name',
-              placeholder: 'Enter first name',
-            },
-            {
-              label: 'Middle Name',
-              label_position: 'floating',
-              input_type: 'text',
-              controller: 'middle_name',
-              placeholder: 'Enter middle name',
-            },
-            {
-              label: 'Birth Date',
-              label_position: 'floating',
-              input_type: 'date',
-              controller: 'birth_date',
-              placeholder: 'Enter birth date',
-            },
-          ]
-        : [
-            {
-              label: 'License Number',
-              label_position: 'floating',
-              input_type: 'text',
-              controller: 'license_number',
-              placeholder: 'Enter license number',
-            },
-          ],
-      buttons: searchByName
-        ? [
-            {
-              label: 'Enter License Number',
-              color: 'primary',
-              class: 'ion-margin-vertical',
-              size: 'small',
-              callback: async () => {
-                await this.popoverController.dismiss();
-                this.promptViolatorSearch(false);
-              },
-            },
-          ]
-        : [
-            {
-              label: "Enter Violator's Name",
-              color: 'primary',
-              class: 'ion-margin-vertical',
-              size: 'small',
-              callback: async () => {
-                await this.popoverController.dismiss();
-                this.promptViolatorSearch(true);
-              },
-            },
-          ],
-      submit_label: 'Create New Ticket',
-      formSubmitCallback: () => this.startCreateTicket(searchByName),
+      parentFormGroup: this.ticketSearchFormGroup,
+      items: [
+        {
+          label: 'Ticket Number',
+          label_position: 'floating',
+          input_type: 'text',
+          controller: 'ticket_number',
+          placeholder: 'Enter ticket number',
+        },
+      ],
+
+      submit_label: 'Create Payment',
+      formSubmitCallback: () => this.searchTicket(),
     };
     const popover = await this.popoverController.create({
       component: PopoverComponent,
@@ -670,6 +605,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
   }
 
   reloadPage() {
+    this.allowScan = true;
     this.current_page = 1;
     this.last_page = 1;
     this.search_phrase = '';
@@ -679,7 +615,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     this.old_last_page = 0;
     this.max_fetch_date = formatDate(Date.now(), 'medium', 'en');
     this.max_date_paginated = '';
-    this.isTicketsLoaded = false;
+    this.isPaymentsLoaded = false;
     this.isSearching = false;
     this.isDateFilterApplied = false;
     this.colReorder = [];
@@ -713,106 +649,107 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     this.old_table_data = null;
   }
 
-  async resolveTicketModalData(
-    new_ticket: boolean = false,
-    update_ticket: boolean = false,
-    searched_violator = null,
-    searched_ticket = null
+  async resolvePaymentModalData(
+    toCreate: boolean = false,
+    toUpdate: boolean = false,
+    searched_ticket = null,
+    searched_payment = null
   ) {
-    const violations = await this.apiService
-      .getViolationsByVehicleType()
-      .catch((res) => {
-        return null;
+    //
+    let paymentFormGroup: FormGroup;
+
+    if (toCreate && searched_ticket) {
+      let violations_penalties = [];
+      let total_amount = 0;
+      searched_ticket.violations.forEach((violation) => {
+        const type_length = violation.violation_types[0].penalties.length;
+        const penalty = new FormControl(
+          type_length > searched_ticket.offense_number
+            ? violation.violation_types[0].penalties[
+                searched_ticket.offense_number - 1
+              ]
+            : violation.violation_types[0].penalties[type_length - 1],
+          [Validators.required, Validators.min(0), Validators.max(100000)]
+        );
+        total_amount += parseInt(penalty.value);
+        violations_penalties.push(penalty);
       });
-    if (!violations) return null;
-    let users = await this.apiService
-      .getUserAccounts(1, 10, 'ASC', '', true)
+      paymentFormGroup = this.formBuilder.group({
+        ticket_number: [
+          searched_ticket ? searched_ticket.number : '',
+          [Validators.required],
+        ],
+        date_of_payment: [new Date().toISOString(), [Validators.required]],
+        or_number: ['', [Validators.required]],
+        penalties: this.formBuilder.array(violations_penalties),
+        total_amount: [
+          total_amount,
+          [Validators.required, Validators.min(0), Validators.max(10000000)],
+        ],
+      });
+    }
+
+    if (toUpdate && searched_payment) {
+      let violations_penalties = [];
+      searched_payment.penalties.forEach((amount) => {
+        if (amount !== '') {
+          const penalty = new FormControl(amount, [
+            Validators.required,
+            Validators.min(0),
+            Validators.max(100000),
+          ]);
+          violations_penalties.push(penalty);
+        }
+      });
+      paymentFormGroup = this.formBuilder.group({
+        ticket_number: [
+          searched_payment ? searched_payment.ticket.number : '',
+          [Validators.required],
+        ],
+        date_of_payment: [
+          searched_payment ? searched_payment.date_of_payment : '',
+          [Validators.required],
+        ],
+        or_number: [searched_payment.or_number, [Validators.required]],
+        penalties: this.formBuilder.array(violations_penalties),
+        total_amount: [
+          searched_payment.total_amount,
+          [Validators.required, Validators.min(0), Validators.max(10000000)],
+        ],
+      });
+    }
+
+    return paymentFormGroup;
+  }
+
+  async searchPayment(payment_id) {
+    const loading = await this.utility.createIonLoading();
+    await loading.present();
+    let err;
+    let payment: any = await this.apiService
+      .getPaymentDetails(payment_id)
       .catch(async (res) => {
+        err = await this.utility.alertErrorStatus(res);
         return null;
       });
-
-    let ticketFormGroup: FormGroup;
-    if (new_ticket && searched_violator) {
-      ticketFormGroup = this.formBuilder.group({
-        ticket_number: ['', [Validators.required]],
-        last_name: [
-          searched_violator.last_name,
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        first_name: [
-          searched_violator.first_name,
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        middle_name: [
-          searched_violator.middle_name != 'null'
-            ? searched_violator.middle_name
-            : '',
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ ]*')],
-        ],
-        birth_date: [searched_violator.birth_date, [Validators.required]],
-        license_number: [
-          searched_violator.license_number != 'null'
-            ? searched_violator.license_number
-            : '',
-          [Validators.pattern('[0-9]*')],
-        ],
-        apprehension_datetime: ['', [Validators.required]],
-        officer_user_id: ['', [Validators.required]],
-        vehicle_type: ['', [Validators.required]],
-        committed_violations: [null, [Validators.required]],
-      });
+    if (!payment || !payment.data) {
+      loading.dismiss();
+      const alert = await this.utility.alertMessage('Payment Record Not Found');
+      return await alert.present();
     }
 
-    if (update_ticket && searched_ticket) {
-      let comm_violations = [];
-      searched_ticket.violations.forEach((element) => {
-        comm_violations.push(element.id + '');
-      });
+    //filter violation types where vehicle type not equal to ticket's vehicle type
+    payment.data.ticket.violations.forEach(
+      (violation) =>
+        (violation.violation_types = violation.violation_types.filter(
+          (type) => type.vehicle_type === payment.data.ticket.vehicle_type
+        ))
+    );
 
-      ticketFormGroup = this.formBuilder.group({
-        ticket_number: [searched_ticket.number, [Validators.required]],
-        last_name: [
-          searched_ticket.violator.last_name,
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        first_name: [
-          searched_ticket.violator.first_name,
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
-        ],
-        middle_name: [
-          searched_ticket.violator.middle_name != 'null'
-            ? searched_ticket.violator.middle_name
-            : '',
-          [Validators.required, Validators.pattern('[a-zA-ZÑñ ]*')],
-        ],
-        birth_date: [
-          searched_ticket.violator.birth_date,
-          [Validators.required],
-        ],
-        license_number: [
-          searched_ticket.violator.license_number != 'null'
-            ? searched_ticket.violator.license_number
-            : '',
-          [Validators.pattern('[0-9]*')],
-        ],
-        vehicle_type: [searched_ticket.vehicle_type, [Validators.required]],
-        apprehension_datetime: [
-          searched_ticket.apprehension_datetime,
-          [Validators.required],
-        ],
-        officer_user_id: [
-          searched_ticket.officer_user_id + '',
-          [Validators.required],
-        ],
-        committed_violations: [comm_violations, [Validators.required]],
-      });
-    }
-
-    return {
-      ticketFormGroup: ticketFormGroup,
-      violations: violations,
-      users: users.data,
-    };
+    this.showPaymentFormModal(false, true, null, payment.data).finally(() => {
+      loading.dismiss();
+    }); //show modal component
+    this.popoverController.dismiss();
   }
 
   async searchTable(value: string) {
@@ -835,11 +772,16 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     dt.rows().remove();
     this.search_phrase = value + '';
 
-    const tickets = await this.fetchTickets(1, 10, 'DESC', this.search_phrase);
-    if (tickets && tickets.data) {
-      this.current_page = tickets.meta.current_page;
-      this.last_page = tickets.meta.last_page;
-      let new_data = tickets.data;
+    const payments = await this.fetchPayments(
+      1,
+      10,
+      'DESC',
+      this.search_phrase
+    );
+    if (payments && payments.data) {
+      this.current_page = payments.meta.current_page;
+      this.last_page = payments.meta.last_page;
+      let new_data = payments.data;
       let new_rows = this.formatTableData(new_data);
       this.addNewTableData(new_rows);
       await this.checkForScrollbar(true);
@@ -848,9 +790,13 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     this.isSearching = false;
   }
 
-  async searchTicket(ticket_id, ticket_number) {
+  async searchTicket(scannedTicketNumber = null) {
     const loading = await this.utility.createIonLoading();
+    this.allowScan = false; //don't listen for scanner
     await loading.present();
+    const ticket_number =
+      scannedTicketNumber ??
+      this.ticketSearchFormGroup.get('ticket_number').value;
     let err = false;
     let ticket: any = await this.apiService
       .getTicketDetails(ticket_number)
@@ -858,73 +804,73 @@ export class TicketsPage implements OnInit, ViewWillLeave {
         err = await this.utility.alertErrorStatus(res);
         return null;
       });
-    if (!ticket) {
+
+    if (!ticket || !ticket.data) {
       loading.dismiss();
-      return;
+      const alert = await this.utility.alertMessage(
+        'Ticket Not Found',
+        'No match found for ticket number ' + ticket_number
+      );
+      this.allowScan = true; // allow listening to scanner
+      return await alert.present();
     }
 
-    this.showTicketFormModal(false, true, null, ticket.data, ticket_id).finally(
-      () => {
-        loading.dismiss();
-      }
+    if (ticket && ticket.data.status_text === 'SETTLED') {
+      loading.dismiss();
+      const alert = await this.utility.alertMessage(
+        'Payment Already Exist',
+        'Ticket ' + ticket_number + ' is already SETTLED'
+      );
+      this.allowScan = true; // allow listening to scanner
+      return await alert.present();
+    }
+
+    //filter violation types where vehicle type not equal to ticket's vehicle type
+    ticket.data.violations.forEach(
+      (violation) =>
+        (violation.violation_types = violation.violation_types.filter(
+          (type) => type.vehicle_type === ticket.data.vehicle_type
+        ))
     );
-    this.popoverController.dismiss();
-  }
 
-  async searchViolator(formData: FormData, fallbackData: {}) {
-    const loading = await this.utility.createIonLoading();
-    await loading.present();
-    let err = false;
-    let violator: any = await this.apiService
-      .getViolatorDetails(formData)
-      .catch(async (res) => {
-        loading.dismiss();
-        err = await this.utility.alertErrorStatus(res);
-      });
-    if (!violator || !violator.data) {
-      violator = {
-        data: fallbackData,
-      };
-    }
-
-    this.showTicketFormModal(true, false, violator.data).finally(() => {
+    this.showPaymentFormModal(true, false, ticket.data).finally(() => {
       loading.dismiss();
-    });
+    }); //show modal component
     this.popoverController.dismiss();
   }
 
-  async showTicketFormModal(
+  async showPaymentFormModal(
     toCreate: boolean = true,
     toUpdate: boolean = false,
-    violator = null,
     ticket = null,
-    ticket_id = 0
+    payment = null
   ) {
-    const data = await this.resolveTicketModalData(
+    const data = await this.resolvePaymentModalData(
       toCreate,
       toUpdate,
-      violator,
-      ticket
-    );
+      ticket,
+      payment
+    ); //prepare form group for modal component
     if (!data) return;
     const modal = await this.modalController.create({
-      component: TicketFormModalComponent,
+      component: PaymentFormModalComponent,
       backdropDismiss: false,
       componentProps: {
-        title: toCreate ? 'New Ticket' : 'Ticket ' + ticket_id,
-        new_ticket: toCreate,
-        update_ticket: toUpdate,
+        title: toCreate
+          ? 'New Payment for Ticket ' + ticket.number
+          : 'Update Payment for Ticket ' + payment.ticket.number,
+        new_payment: toCreate,
+        update_payment: toUpdate,
         modalCtrl: this.modalController,
-        searched_violator: violator,
         searched_ticket: ticket,
-        ticket_id: ticket_id,
-        violations: data.violations,
-        ticketFormGroup: data.ticketFormGroup,
-        users: data.users,
+        searched_payment: payment,
+        paymentFormGroup: data,
       },
     });
 
+    //listen to modal response
     modal.onDidDismiss().then(async (data: any) => {
+      this.allowScan = true; //allow listening to scanner
       const status = data.data.status;
       if (status) {
         this.reloadPage();
@@ -940,33 +886,24 @@ export class TicketsPage implements OnInit, ViewWillLeave {
     const id = dtInstance.data()[row_index][0];
     const tn_index = dtInstance.colReorder.order().indexOf(1);
     const tn = dtInstance.data()[row_index][tn_index];
-    const status_index = dtInstance.colReorder.order().indexOf(7);
-    const status = dtInstance.data()[row_index][status_index];
-
     const items = [
       {
         label: 'VIEW & EDIT',
         icon: 'open-outline',
         callback: async () => {
-          await this.searchTicket(id, tn);
+          await this.searchPayment(id);
+        },
+      },
+      {
+        label: 'DELETE',
+        icon: 'trash-outline',
+        callback: async () => {
+          await this.confirmDeleteTicket(id);
         },
       },
     ];
-
-    const deleteOption =
-      status === 'SETTLED'
-        ? null
-        : {
-            label: 'DELETE',
-            icon: 'trash-outline',
-            callback: async () => {
-              await this.confirmDeleteTicket(id, tn);
-            },
-          };
-    if (deleteOption !== null) items.push(deleteOption);
-
     const componentProps = {
-      title: 'Ticket ' + tn,
+      title: 'Ticket ' + tn + ' Payment',
       subtitle: 'Select Action',
       isForm: false,
       items: items,
@@ -983,39 +920,6 @@ export class TicketsPage implements OnInit, ViewWillLeave {
       if (status) this.reloadPage();
     });
     return await popover.present();
-  }
-
-  // async showSideMenu(menuId: string) {
-  //   this.menuController.toggle(menuId);
-  // }
-
-  async startCreateTicket(searchByName: boolean) {
-    let formData = new FormData();
-    let fallbackData: any = null;
-    if (!searchByName) {
-      fallbackData = {
-        license_number:
-          this.violatorSearchFormGroup.get('license_number').value,
-        tickets_count: 0,
-      };
-    }
-    if (searchByName) {
-      const f = this.violatorSearchFormGroup.get('first_name').value + '';
-      const m = this.violatorSearchFormGroup.get('middle_name').value + '';
-      const l = this.violatorSearchFormGroup.get('last_name').value + '';
-      fallbackData = {
-        first_name: f.trim(),
-        middle_name: m.trim(),
-        last_name: l.trim(),
-        birth_date: this.violatorSearchFormGroup.get('birth_date').value,
-        tickets_count: 0,
-      };
-    }
-
-    for (const key in this.violatorSearchFormGroup.value) {
-      formData.append(key, this.violatorSearchFormGroup.get(key).value);
-    }
-    await this.searchViolator(formData, fallbackData);
   }
 
   async toggleColumnVisibility(index: number) {

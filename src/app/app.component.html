@@ -41,59 +41,93 @@
         </ion-toolbar>
       </ion-header>
       <ion-content color="light">
-        <ion-list class="ion-padding-end" color="light">
-          <ion-menu-toggle menu="side-menu" auto-hide="false"
-            ><ion-item
-              [routerLink]="['/home']"
-              routerLinkActive="router-link-active"
-              replaceUrl="true"
+        <ion-list color="light">
+          <ion-item-group>
+            <ion-item-divider>
+              <ion-label>Manage Records</ion-label>
+            </ion-item-divider>
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/home']"
+                routerLinkActive="router-link-active"
+                replaceUrl="true"
+              >
+                <ion-icon name="analytics-outline" slot="start"></ion-icon>
+                <ion-label>Analytics</ion-label>
+              </ion-item></ion-menu-toggle
             >
-              <ion-icon name="home-outline" slot="start"></ion-icon>
-              <ion-label>Home</ion-label>
-            </ion-item></ion-menu-toggle
-          >
-          <ion-menu-toggle menu="side-menu" auto-hide="false"
-            ><ion-item
-              [routerLink]="['/tickets']"
-              routerLinkActive="router-link-active"
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/tickets']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="ticket-outline" slot="start"></ion-icon>
+                <ion-label>Citation Tickets</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/violations']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="flag-outline" slot="start"></ion-icon>
+                <ion-label>Violations</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/payments']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="scan-outline" slot="start"></ion-icon>
+                <ion-label>Payments</ion-label>
+              </ion-item></ion-menu-toggle
             >
-              <ion-icon name="ticket-outline" slot="start"></ion-icon>
-              <ion-label>Citation Tickets</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <ion-menu-toggle menu="side-menu" auto-hide="false"
-            ><ion-item
-              [routerLink]="['/violations']"
-              routerLinkActive="router-link-active"
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/users']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="people-outline" slot="start"></ion-icon>
+                <ion-label>User Accounts</ion-label>
+              </ion-item></ion-menu-toggle
             >
-              <ion-icon name="flag-outline" slot="start"></ion-icon>
-              <ion-label>Violations</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-          <!-- <ion-menu-toggle menu="side-menu" auto-hide="false"
-          ><ion-item
-            [routerLink]="['/select-search']"
-            routerLinkActive="router-link-active"
-          >
-            <ion-icon name="search-outline" slot="start"></ion-icon>
-            <ion-label>Search Ticket</ion-label>
-          </ion-item></ion-menu-toggle
-        > -->
-          <ion-menu-toggle menu="side-menu" auto-hide="false"
-            ><ion-item
-              [routerLink]="['/account-settings']"
-              routerLinkActive="router-link-active"
+          </ion-item-group>
+          <ion-item-group>
+            <ion-item-divider>
+              <ion-label>Advance Settings</ion-label>
+            </ion-item-divider>
+
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/ticket-inputs']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="options-outline" slot="start"></ion-icon>
+                <ion-label>Ticket Inputs</ion-label>
+              </ion-item></ion-menu-toggle
             >
-              <ion-icon name="settings-outline" slot="start"></ion-icon>
-              <ion-label>Account Settings</ion-label>
-            </ion-item></ion-menu-toggle
-          >
-          <ion-menu-toggle menu="side-menu" auto-hide="false"
-            ><ion-item button (click)="logout()">
-              <ion-icon name="log-out-outline" slot="start"></ion-icon>
-              <ion-label>Logout</ion-label>
-            </ion-item></ion-menu-toggle
-          >
+          </ion-item-group>
+          <ion-item-group>
+            <ion-item-divider>
+              <ion-label>My Account</ion-label>
+            </ion-item-divider>
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item
+                [routerLink]="['/account-settings']"
+                routerLinkActive="router-link-active"
+              >
+                <ion-icon name="settings-outline" slot="start"></ion-icon>
+                <ion-label>Account Settings</ion-label>
+              </ion-item></ion-menu-toggle
+            >
+            <ion-menu-toggle menu="side-menu" auto-hide="false"
+              ><ion-item button (click)="logout()">
+                <ion-icon name="log-out-outline" slot="start"></ion-icon>
+                <ion-label>Logout</ion-label>
+              </ion-item></ion-menu-toggle
+            >
+          </ion-item-group>
         </ion-list>
       </ion-content>
       <ion-footer>

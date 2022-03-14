@@ -8,18 +8,17 @@ import {
 } from '@ionic/angular';
 import { DataTableDirective } from 'angular-datatables';
 import { take } from 'rxjs/operators';
-import { ViolationFormModalComponent } from 'src/app/modules/shared/violation-form-modal/violation-form-modal.component';
+import { UserFormModalComponent } from 'src/app/modules/shared/user-form-modal/user-form-modal.component';
 import { PopoverComponent } from '../../modules/shared/popover/popover.component';
 import { ApiService } from '../../services/api.service';
 import { StorageService } from '../../services/storage.service';
 import { UtilityService } from '../../services/utility.service';
-
 @Component({
-  selector: 'app-violations',
-  templateUrl: './violations.page.html',
-  styleUrls: ['./violations.page.scss'],
+  selector: 'app-users',
+  templateUrl: './users.page.html',
+  styleUrls: ['./users.page.scss'],
 })
-export class ViolationsPage implements OnInit, ViewWillLeave {
+export class UsersPage implements OnInit, ViewWillLeave {
   hasScrollbar = false;
 
   // checks if there's a scrollbar when the user resizes the window or zooms in/out
@@ -31,16 +30,13 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   async ionViewWillLeave(): Promise<void> {
     if (this.toggleModels && this.toggleModels.length > 0)
       await this.storage
-        .set(
-          'settings_violationTableColumns',
-          JSON.stringify(this.toggleModels)
-        )
+        .set('settings_userTableColumns', JSON.stringify(this.toggleModels))
         .catch((res) => {});
 
     if (this.colReorder && this.colReorder.length > 0)
       await this.storage
         .set(
-          'settings_violationTableColumnsReorder',
+          'settings_userTableColumnsReorder',
           JSON.stringify(this.colReorder)
         )
         .catch((res) => {});
@@ -56,9 +52,9 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   private old_table_data: any;
   private old_current_page = 0;
   private old_last_page = 0;
-  isViolationsLoaded = false;
+  isUsersLoaded = false;
   isSearching = false;
-  toggleModels = [false, true, true, true, true, true, true];
+  toggleModels = [false, true, true, true, true];
   colReorder = [];
   cachedColReorder = [];
   /*table structure START HERE*/
@@ -164,10 +160,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return;
   }
 
-  async confirmDeleteViolation(
-    violation_id: number,
-    violation_type_id: number
-  ) {
+  async confirmDeleteUserAccount(user_id: number) {
     const options = {
       inputs: [
         {
@@ -181,15 +174,15 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
           text: 'Continue',
           cssClass: 'secondary',
           handler: async (credentials) => {
-            const operation = 'Unable to delete violation';
+            const operation = 'Unable to delete account';
             if (credentials.password) {
               const formData = new FormData();
               formData.append('password', credentials.password);
               this.apiService.confirmPassword(formData).then(
                 async (data: any) => {
                   if (data.password_match_status === true) {
-                    //delete violation
-                    await this.deleteViolation(violation_id, violation_type_id);
+                    //delete user
+                    await this.deleteUserAccount(user_id);
                   } else {
                     const alert = await this.utility.alertMessage(
                       operation,
@@ -220,23 +213,21 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     await alert.present();
   }
 
-  async deleteViolation(violation_id: number, violation_type_id: number) {
+  async deleteUserAccount(user_id: number) {
     const loading = await this.utility.createIonLoading();
     await loading.present();
-    const status = await this.apiService
-      .deleteViolation(violation_id, violation_type_id)
-      .then(
-        (res: any) => {
-          return res.deleted;
-        },
-        async (res) => {
-          return false;
-        }
-      );
+    const status = await this.apiService.deleteUserAccount(user_id, true).then(
+      (res: any) => {
+        return res.deleted;
+      },
+      async (res) => {
+        return false;
+      }
+    );
     loading.dismiss();
     const feedback = status
-      ? 'Violation has been deleted.'
-      : 'Violation failed to delete.';
+      ? 'User Account has been deleted.'
+      : 'User Account failed to delete.';
     const alert = await this.utility.alertMessage(feedback);
     this.popoverController.dismiss({
       dismissed: true,
@@ -257,14 +248,14 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     });
   }
 
-  private async fetchViolations(
+  private async fetchUserAccounts(
     page = 1,
     limit = 10,
     order = 'ASC',
     search = ''
   ) {
     return this.apiService
-      .getViolations(page, limit, order, search)
+      .getUserAccounts(page, limit, order, search)
       .catch((res) => {
         this.utility.alertErrorStatus(res);
         return null;
@@ -274,52 +265,43 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   private formatTableData(data: any[]) {
     let to_add = [];
     data.forEach((e) => {
-      e.id = e.id + '';
-      e.violation_code = e.violation_code + ''.toUpperCase();
-      e.violation = e.violation + ''.toUpperCase();
-      e.violation_types.forEach((type) => {
-        const status = type.active ? 'ACTIVE' : 'NOT ACTIVE';
-        let new_row = [
-          `${e.id}:${type.id}:${status}:${e.tickets_count}:${e.violation_types_count}:${type.violations_count}`,
-          ('' + e.violation_code).toUpperCase(),
-          ('' + e.violation).toUpperCase(),
-          ('' + type.type).toUpperCase(),
-          ('' + type.vehicle_type).toUpperCase(),
-          type.penalties.join(', ').toUpperCase(),
-          status,
+      const status = !e.deleted_at ? 'ACTIVE' : 'NOT ACTIVE';
+      let new_row = [
+        `${e.id}:${e.tickets_count}`,
+        ('' + e.name).toUpperCase(),
+        '' + e.username,
+        ('' + e.type).toUpperCase(),
+        status,
+      ];
+      if (this.colReorder && this.colReorder.length > 0) {
+        new_row = [
+          new_row[this.colReorder[0]],
+          new_row[this.colReorder[1]],
+          new_row[this.colReorder[2]],
+          new_row[this.colReorder[3]],
+          new_row[this.colReorder[4]],
         ];
-        if (this.colReorder && this.colReorder.length > 0) {
-          new_row = [
-            new_row[this.colReorder[0]],
-            new_row[this.colReorder[1]],
-            new_row[this.colReorder[2]],
-            new_row[this.colReorder[3]],
-            new_row[this.colReorder[4]],
-            new_row[this.colReorder[5]],
-            new_row[this.colReorder[6]],
-          ];
-        }
-        to_add.push(new_row);
-      });
+      }
+      to_add.push(new_row);
     });
     return to_add;
   }
 
   private async initialLoadData() {
     this.isSearching = true;
-    const violations = await this.fetchViolations();
+    const users = await this.fetchUserAccounts();
 
-    if (violations && violations.data) {
-      let new_data = violations.data;
-      this.current_page = violations.meta.current_page;
-      this.last_page = violations.meta.last_page;
+    if (users && users.data) {
+      let new_data = users.data;
+      this.current_page = users.meta.current_page;
+      this.last_page = users.meta.last_page;
       this.rows = this.formatTableData(new_data);
     }
 
-    this.isViolationsLoaded = true;
+    this.isUsersLoaded = true;
 
     const raw_data_colVis = await this.storage
-      .get('settings_violationTableColumns')
+      .get('settings_userTableColumns')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -328,7 +310,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.toggleModels = JSON.parse(raw_data_colVis) ?? this.toggleModels;
 
     const raw_data_colReorder = await this.storage
-      .get('settings_violationTableColumnsReorder')
+      .get('settings_userTableColumnsReorder')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -370,17 +352,17 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
 
   async loadData(event = null, limit = 10, order = 'ASC') {
     this.isSearching = true;
-    const violations = await this.fetchViolations(
+    const users = await this.fetchUserAccounts(
       this.current_page + 1,
       limit,
       order,
       this.search_phrase
     );
-    if (violations && violations.data) {
-      let new_data = violations.data;
+    if (users && users.data) {
+      let new_data = users.data;
       if (new_data.length > 0) {
-        this.current_page = violations.meta.current_page;
-        this.last_page = violations.meta.last_page;
+        this.current_page = users.meta.current_page;
+        this.last_page = users.meta.last_page;
         let new_rows = this.formatTableData(new_data);
         this.addNewTableData(new_rows);
       }
@@ -428,7 +410,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.old_table_data = null;
     this.old_current_page = 0;
     this.old_last_page = 0;
-    this.isViolationsLoaded = false;
+    this.isUsersLoaded = false;
     this.isSearching = false;
     this.colReorder = [];
     this.cachedColReorder = [];
@@ -456,65 +438,41 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.old_table_data = null;
   }
 
-  async resolveViolationModalData(
-    searched_violation = null,
-    toCreate: boolean = true
-  ) {
-    let violationFormGroup: FormGroup;
-    violationFormGroup = this.formBuilder.group({
-      violation_code: [
-        searched_violation ? searched_violation.violation_code : '',
-        toCreate ? null : [Validators.required],
+  async resolveUserModalData(searched_user = null, toCreate: boolean = true) {
+    let userFormGroup: FormGroup;
+    userFormGroup = this.formBuilder.group({
+      name: [
+        searched_user && !toCreate ? searched_user.name : '',
+        [Validators.required, Validators.pattern('[a-zA-ZÑñ][a-zA-ZÑñ ]*')],
       ],
-      violation: [
-        searched_violation ? searched_violation.violation : '',
+      username: [
+        searched_user && !toCreate ? searched_user.username : '',
+        [Validators.required, Validators.pattern(/^[a-zA-ZÑñ0-9@$_.]+$/)],
+      ],
+      user_type: [
+        searched_user && !toCreate ? searched_user.type : '',
         [Validators.required],
-      ],
-      type: [
-        searched_violation ? searched_violation.violation_types[0].type : '',
-        [Validators.required],
-      ],
-      vehicle_type: [
-        searched_violation
-          ? searched_violation.violation_types[0].vehicle_type
-          : '',
-        [Validators.required],
-      ],
-      penalties: [
-        searched_violation
-          ? searched_violation.violation_types[0].penalties.join()
-          : '',
-        [
-          Validators.required,
-          Validators.pattern(/^[1-9][0-9]*(,[1-9][0-9]*)*$/),
-        ],
       ],
     });
 
-    return violationFormGroup;
+    return userFormGroup;
   }
 
-  async searchViolation(violation_id: number, violation_type_id: number) {
+  async searchUserAccount(user_id: number) {
     const loading = await this.utility.createIonLoading();
     await loading.present();
     let err = false;
-    let violation: any = await this.apiService
-      .getViolationDetails(violation_id, violation_type_id)
+    let user: any = await this.apiService
+      .getUserAccountDetails(user_id)
       .catch(async (res) => {
         err = await this.utility.alertErrorStatus(res);
         return null;
       });
-    if (!violation || !violation.data) {
+    if (!user || !user.data) {
       loading.dismiss();
       return;
     }
-    this.showViolationFormModal(
-      false,
-      true,
-      violation_id,
-      violation_type_id,
-      violation.data
-    ).finally(() => {
+    this.showUserFormModal(false, true, user_id, user.data).finally(() => {
       loading.dismiss();
     });
     this.popoverController.dismiss();
@@ -534,16 +492,16 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     dt.rows().remove();
     this.search_phrase = value + '';
 
-    const violations = await this.fetchViolations(
+    const users = await this.fetchUserAccounts(
       1,
       10,
       'DESC',
       this.search_phrase
     );
-    if (violations && violations.data) {
-      this.current_page = violations.meta.current_page;
-      this.last_page = violations.meta.last_page;
-      let new_data = violations.data;
+    if (users && users.data) {
+      this.current_page = users.meta.current_page;
+      this.last_page = users.meta.last_page;
+      let new_data = users.data;
       let new_rows = this.formatTableData(new_data);
       this.addNewTableData(new_rows);
       await this.checkForScrollbar(true);
@@ -561,41 +519,49 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       .data();
     let ids_array = old_row_id.split(':');
 
-    const violation_id: number = +ids_array[0];
-    const violation_type_id: number = +ids_array[1];
-    const code_index =
+    const user_id: number = +ids_array[0];
+    const tickets_count: number = +ids_array[1];
+
+    const status_index =
       this.colReorder && this.colReorder.length > 0
-        ? this.colReorder.indexOf(1)
-        : 1;
-    const code = dtInstance.cell({ row: row_index, column: code_index }).data();
+        ? this.colReorder.indexOf(4)
+        : 4;
+    const status = dtInstance
+      .cell({ row: row_index, column: status_index })
+      .data();
+
+    const username_index =
+      this.colReorder && this.colReorder.length > 0
+        ? this.colReorder.indexOf(2)
+        : 2;
+    const username = dtInstance
+      .cell({ row: row_index, column: username_index })
+      .data();
     let items = [];
 
     const viewEditOption = {
       label: 'VIEW & EDIT',
       icon: 'open-outline',
       callback: async () => {
-        await this.searchViolation(violation_id, violation_type_id);
+        await this.searchUserAccount(user_id);
       },
     };
 
     const toggleActiveOption = {
-      label: ids_array[2] == 'ACTIVE' ? 'SET TO NOT ACTIVE' : 'SET TO ACTIVE',
+      label: status == 'ACTIVE' ? 'SET TO NOT ACTIVE' : 'SET TO ACTIVE',
       icon: 'toggle-outline',
       callback: async () => {
-        await this.toggleStatus(violation_id, violation_type_id, row_index);
+        await this.toggleStatus(user_id, row_index);
       },
     };
 
     const deleteOption =
-      +ids_array[3] === 0
+      tickets_count === 0
         ? {
             label: 'DELETE',
             icon: 'trash-outline',
             callback: async () => {
-              await this.confirmDeleteViolation(
-                violation_id,
-                violation_type_id
-              );
+              await this.confirmDeleteUserAccount(user_id);
             },
           }
         : null;
@@ -605,7 +571,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     if (deleteOption) items.push(deleteOption);
 
     const componentProps = {
-      title: 'Violation ' + code,
+      title: "User Account of '" + username + "'",
       subtitle: 'Select Action',
       isForm: false,
       items: items,
@@ -624,27 +590,25 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return await popover.present();
   }
 
-  async showViolationFormModal(
+  async showUserFormModal(
     toCreate: boolean = true,
     toUpdate: boolean = false,
-    violation_id: number = null,
-    violation_type_id: number = null,
-    violation = null
+    user_id: number = null,
+    user = null
   ) {
-    const data = await this.resolveViolationModalData(violation, toCreate);
+    const data = await this.resolveUserModalData(user, toCreate);
     if (!data) return;
     const modal = await this.modalController.create({
-      component: ViolationFormModalComponent,
+      component: UserFormModalComponent,
       backdropDismiss: false,
       componentProps: {
-        title: toCreate ? 'New Violation' : 'Update Violation',
-        new_violation: toCreate,
-        update_violation: toUpdate,
+        title: toCreate ? 'New User Account' : 'Update User Account',
+        new_user: toCreate,
+        update_user: toUpdate,
         modalCtrl: this.modalController,
-        searched_violation: violation,
-        violationFormGroup: data,
-        violation_id: violation_id,
-        violation_type_id: violation_type_id,
+        searched_user: user,
+        userFormGroup: data,
+        user_id: user_id,
       },
     });
 
@@ -657,24 +621,18 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return await modal.present();
   }
 
-  async toggleStatus(
-    violation_id: number,
-    violation_type_id: number,
-    row_index: number
-  ) {
+  async toggleStatus(user_id: number, row_index: number) {
     this.popoverController.dismiss();
     const loading = await this.utility.createIonLoading();
     await loading.present();
-    const status = await this.apiService
-      .toggleViolationStatus(violation_id, violation_type_id)
-      .then(
-        (res: any) => {
-          return res.update_status;
-        },
-        async (res) => {
-          return false;
-        }
-      );
+    const status = await this.apiService.deleteUserAccount(user_id, false).then(
+      (res: any) => {
+        return res.update_status;
+      },
+      async (res) => {
+        return await this.utility.alertErrorStatus(res);
+      }
+    );
     loading.dismiss();
     if (status) {
       const dtInstance = await this.datatableElement.dtInstance.catch((res) => {
@@ -683,8 +641,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       if (!dtInstance) return;
       let status_index =
         this.colReorder && this.colReorder.length > 0
-          ? this.colReorder.indexOf(6)
-          : 6;
+          ? this.colReorder.indexOf(4)
+          : 4;
 
       let old_status = dtInstance
         .cell({ row: row_index, column: status_index })
@@ -695,19 +653,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       dtInstance
         .cell({ row: row_index, column: status_index })
         .data(new_status);
-      let old_row_id: string = dtInstance
-        .cell({ row: row_index, column: 0 })
-        .data();
-
-      let new_row_id: string = old_row_id.replace(old_status, new_status);
-
-      dtInstance.cell({ row: row_index, column: 0 }).data(new_row_id);
-      return;
     }
-    const alert = await this.utility.alertMessage(
-      'Violation failed to change active status.'
-    );
-    return await alert.present();
+    return;
   }
 
   async toggleColumnVisibility(index: number) {

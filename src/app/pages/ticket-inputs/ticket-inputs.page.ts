@@ -1,5 +1,10 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import {
   IonContent,
   ModalController,
@@ -8,31 +13,26 @@ import {
 } from '@ionic/angular';
 import { DataTableDirective } from 'angular-datatables';
 import { take } from 'rxjs/operators';
-import { ViolationFormModalComponent } from 'src/app/modules/shared/violation-form-modal/violation-form-modal.component';
+import {
+  ExtraInputFormModalComponent,
+  INPUT_DATA_TYPE,
+} from '../../modules/shared/extra-input-form-modal/extra-input-form-modal.component';
 import { PopoverComponent } from '../../modules/shared/popover/popover.component';
 import { ApiService } from '../../services/api.service';
 import { StorageService } from '../../services/storage.service';
 import { UtilityService } from '../../services/utility.service';
 
 @Component({
-  selector: 'app-violations',
-  templateUrl: './violations.page.html',
-  styleUrls: ['./violations.page.scss'],
+  selector: 'app-ticket-inputs',
+  templateUrl: './ticket-inputs.page.html',
+  styleUrls: ['./ticket-inputs.page.scss'],
 })
-export class ViolationsPage implements OnInit, ViewWillLeave {
-  hasScrollbar = false;
-
-  // checks if there's a scrollbar when the user resizes the window or zooms in/out
-  @HostListener('window:resize', ['$event'])
-  async onResize() {
-    await this.checkForScrollbar();
-  }
-
+export class TicketInputsPage implements OnInit, ViewWillLeave {
   async ionViewWillLeave(): Promise<void> {
     if (this.toggleModels && this.toggleModels.length > 0)
       await this.storage
         .set(
-          'settings_violationTableColumns',
+          'settings_ticketInputTableColumns',
           JSON.stringify(this.toggleModels)
         )
         .catch((res) => {});
@@ -40,7 +40,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     if (this.colReorder && this.colReorder.length > 0)
       await this.storage
         .set(
-          'settings_violationTableColumnsReorder',
+          'settings_ticketInputTableColumnsReorder',
           JSON.stringify(this.colReorder)
         )
         .catch((res) => {});
@@ -56,7 +56,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   private old_table_data: any;
   private old_current_page = 0;
   private old_last_page = 0;
-  isViolationsLoaded = false;
+  isExtraInputsLoaded = false;
   isSearching = false;
   toggleModels = [false, true, true, true, true, true, true];
   colReorder = [];
@@ -70,8 +70,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     ordering: true,
     colReorder: true,
     order: [
-      [2, 'asc'],
       [1, 'asc'],
+      [6, 'desc'],
     ],
     autoWidth: true,
     info: false,
@@ -116,7 +116,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
         targets: [0],
         visible: false,
       },
-      { targets: [1, 2, 3], searchable: true },
+      { targets: [1], searchable: true },
       { targets: '_all', searchable: false, visible: true },
     ],
   };
@@ -150,24 +150,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.cachedColReorder = this.colReorder;
   }
 
-  async checkForScrollbar(ignoreSearchingStatus = false) {
-    const scrollElement = await this.content.getScrollElement();
-    this.hasScrollbar = scrollElement.scrollHeight > scrollElement.clientHeight;
-    while (!this.hasScrollbar && this.current_page < this.last_page) {
-      if (!this.isSearching || ignoreSearchingStatus) {
-        await this.loadData().then(() => {
-          this.hasScrollbar =
-            scrollElement.scrollHeight > scrollElement.clientHeight;
-        });
-      }
-    }
-    return;
-  }
-
-  async confirmDeleteViolation(
-    violation_id: number,
-    violation_type_id: number
-  ) {
+  async confirmDeleteTicketInput(extra_input_id: number) {
     const options = {
       inputs: [
         {
@@ -181,15 +164,15 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
           text: 'Continue',
           cssClass: 'secondary',
           handler: async (credentials) => {
-            const operation = 'Unable to delete violation';
+            const operation = 'Unable to delete account';
             if (credentials.password) {
               const formData = new FormData();
               formData.append('password', credentials.password);
               this.apiService.confirmPassword(formData).then(
                 async (data: any) => {
                   if (data.password_match_status === true) {
-                    //delete violation
-                    await this.deleteViolation(violation_id, violation_type_id);
+                    //delete user
+                    await this.deleteUserAccount(extra_input_id);
                   } else {
                     const alert = await this.utility.alertMessage(
                       operation,
@@ -220,11 +203,11 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     await alert.present();
   }
 
-  async deleteViolation(violation_id: number, violation_type_id: number) {
+  async deleteUserAccount(extra_input_id: number) {
     const loading = await this.utility.createIonLoading();
     await loading.present();
     const status = await this.apiService
-      .deleteViolation(violation_id, violation_type_id)
+      .deleteExtraInput(extra_input_id, true)
       .then(
         (res: any) => {
           return res.deleted;
@@ -235,8 +218,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       );
     loading.dismiss();
     const feedback = status
-      ? 'Violation has been deleted.'
-      : 'Violation failed to delete.';
+      ? 'Input field has been deleted.'
+      : 'Input field failed to delete.';
     const alert = await this.utility.alertMessage(feedback);
     this.popoverController.dismiss({
       dismissed: true,
@@ -257,69 +240,61 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     });
   }
 
-  private async fetchViolations(
-    page = 1,
-    limit = 10,
-    order = 'ASC',
-    search = ''
-  ) {
-    return this.apiService
-      .getViolations(page, limit, order, search)
-      .catch((res) => {
-        this.utility.alertErrorStatus(res);
-        return null;
-      });
+  private async fetchTicketInputs(target = null, search = '') {
+    return this.apiService.getExtraInputs(target, search).catch((res) => {
+      this.utility.alertErrorStatus(res);
+      return null;
+    });
   }
 
   private formatTableData(data: any[]) {
     let to_add = [];
     data.forEach((e) => {
-      e.id = e.id + '';
-      e.violation_code = e.violation_code + ''.toUpperCase();
-      e.violation = e.violation + ''.toUpperCase();
-      e.violation_types.forEach((type) => {
-        const status = type.active ? 'ACTIVE' : 'NOT ACTIVE';
-        let new_row = [
-          `${e.id}:${type.id}:${status}:${e.tickets_count}:${e.violation_types_count}:${type.violations_count}`,
-          ('' + e.violation_code).toUpperCase(),
-          ('' + e.violation).toUpperCase(),
-          ('' + type.type).toUpperCase(),
-          ('' + type.vehicle_type).toUpperCase(),
-          type.penalties.join(', ').toUpperCase(),
-          status,
+      const status = e.active ? 'ACTIVE' : 'NOT ACTIVE';
+      const subsection =
+        e.property_owner === 'violator'
+          ? "VIOLATOR'S DETAILS"
+          : 'TRAFFIC RELATED VIOLATION';
+      let new_row = [
+        `${e.id}:${e.ticket_extra_properties_count}:${e.violator_extra_properties_count}`,
+        e.text_label,
+        INPUT_DATA_TYPE[e.data_type],
+        e.is_required ? 'YES' : 'NO',
+        subsection,
+        e.order_in_form,
+        status,
+      ];
+      if (this.colReorder && this.colReorder.length > 0) {
+        new_row = [
+          new_row[this.colReorder[0]],
+          new_row[this.colReorder[1]],
+          new_row[this.colReorder[2]],
+          new_row[this.colReorder[3]],
+          new_row[this.colReorder[4]],
+          new_row[this.colReorder[5]],
+          new_row[this.colReorder[6]],
         ];
-        if (this.colReorder && this.colReorder.length > 0) {
-          new_row = [
-            new_row[this.colReorder[0]],
-            new_row[this.colReorder[1]],
-            new_row[this.colReorder[2]],
-            new_row[this.colReorder[3]],
-            new_row[this.colReorder[4]],
-            new_row[this.colReorder[5]],
-            new_row[this.colReorder[6]],
-          ];
-        }
-        to_add.push(new_row);
-      });
+      }
+      to_add.push(new_row);
     });
     return to_add;
   }
 
   private async initialLoadData() {
     this.isSearching = true;
-    const violations = await this.fetchViolations();
+    const extra_inputs = await this.fetchTicketInputs();
 
-    if (violations && violations.data) {
-      let new_data = violations.data;
-      this.current_page = violations.meta.current_page;
-      this.last_page = violations.meta.last_page;
+    if (extra_inputs && extra_inputs.data) {
+      let new_data = extra_inputs.data;
+      // this.current_page = extra_inputs.meta.current_page;
+      // this.last_page = extra_inputs.meta.last_page;
       this.rows = this.formatTableData(new_data);
     }
 
-    this.isViolationsLoaded = true;
+    this.isExtraInputsLoaded = true;
 
     const raw_data_colVis = await this.storage
-      .get('settings_violationTableColumns')
+      .get('settings_ticketInputTableColumns')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -328,7 +303,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.toggleModels = JSON.parse(raw_data_colVis) ?? this.toggleModels;
 
     const raw_data_colReorder = await this.storage
-      .get('settings_violationTableColumnsReorder')
+      .get('settings_ticketInputTableColumnsReorder')
       .pipe(take(1))
       .toPromise()
       .catch((res) => {
@@ -341,51 +316,24 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       .map((v, i) => (!v ? i : -1))
       .filter((v) => v > -1);
 
-    if (this.datatableElement) {
-      if (hidden_columns.length > 0) {
-        (await this.datatableElement.dtInstance)
-          .columns(hidden_columns)
-          .visible(false);
-      }
+    if (hidden_columns.length > 0) {
+      (await this.datatableElement.dtInstance)
+        .columns(hidden_columns)
+        .visible(false);
+    }
 
-      if (this.colReorder && this.colReorder.length > 0) {
-        (<any>await this.datatableElement.dtInstance).colReorder.order(
-          this.colReorder
-        );
-      }
-
-      (await this.datatableElement.dtInstance).on(
-        'column-reorder',
-        async () => {
-          this.colReorder = (<any>(
-            await this.datatableElement.dtInstance
-          )).colReorder.order();
-        }
+    if (this.colReorder && this.colReorder.length > 0) {
+      (<any>await this.datatableElement.dtInstance).colReorder.order(
+        this.colReorder
       );
     }
 
-    this.isSearching = false;
-    this.checkForScrollbar();
-  }
+    (await this.datatableElement.dtInstance).on('column-reorder', async () => {
+      this.colReorder = (<any>(
+        await this.datatableElement.dtInstance
+      )).colReorder.order();
+    });
 
-  async loadData(event = null, limit = 10, order = 'ASC') {
-    this.isSearching = true;
-    const violations = await this.fetchViolations(
-      this.current_page + 1,
-      limit,
-      order,
-      this.search_phrase
-    );
-    if (violations && violations.data) {
-      let new_data = violations.data;
-      if (new_data.length > 0) {
-        this.current_page = violations.meta.current_page;
-        this.last_page = violations.meta.last_page;
-        let new_rows = this.formatTableData(new_data);
-        this.addNewTableData(new_rows);
-      }
-    }
-    if (event) event?.target.complete();
     this.isSearching = false;
   }
 
@@ -428,7 +376,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.old_table_data = null;
     this.old_current_page = 0;
     this.old_last_page = 0;
-    this.isViolationsLoaded = false;
+    this.isExtraInputsLoaded = false;
     this.isSearching = false;
     this.colReorder = [];
     this.cachedColReorder = [];
@@ -437,7 +385,6 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   }
 
   async resetTable(value: string = '') {
-    value = value.replace(/[^0-9a-zA-ZÑñ ]/gi, '');
     if (value || !this.old_table_data) return;
 
     this.search_phrase = '';
@@ -456,64 +403,76 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     this.old_table_data = null;
   }
 
-  async resolveViolationModalData(
-    searched_violation = null,
-    toCreate: boolean = true
-  ) {
-    let violationFormGroup: FormGroup;
-    violationFormGroup = this.formBuilder.group({
-      violation_code: [
-        searched_violation ? searched_violation.violation_code : '',
-        toCreate ? null : [Validators.required],
-      ],
-      violation: [
-        searched_violation ? searched_violation.violation : '',
-        [Validators.required],
-      ],
-      type: [
-        searched_violation ? searched_violation.violation_types[0].type : '',
-        [Validators.required],
-      ],
-      vehicle_type: [
-        searched_violation
-          ? searched_violation.violation_types[0].vehicle_type
-          : '',
-        [Validators.required],
-      ],
-      penalties: [
-        searched_violation
-          ? searched_violation.violation_types[0].penalties.join()
-          : '',
-        [
-          Validators.required,
-          Validators.pattern(/^[1-9][0-9]*(,[1-9][0-9]*)*$/),
-        ],
-      ],
-    });
+  async resolveTicketInputModalData(searched_extra_input = null) {
+    let extraInputFormGroup: FormGroup;
+    let selection_options = [];
+    if (
+      searched_extra_input &&
+      searched_extra_input.data_type === 'selection'
+    ) {
+      selection_options = [];
+      searched_extra_input.options.forEach((option: any) => {
+        if (option) {
+          const new_option = new FormControl(option, [
+            Validators.required,
+            Validators.pattern('[a-zA-Z0-9Ññ][a-zA-Z0-9Ññ,. -]*'),
+          ]);
+          selection_options.push(new_option);
+        }
+      });
+    }
 
-    return violationFormGroup;
+    extraInputFormGroup = this.formBuilder.group({
+      property_owner: [
+        searched_extra_input ? searched_extra_input.property_owner : '',
+        [Validators.required, Validators.pattern(/^[a-zA-Z]+$/)],
+      ],
+      text_label: [
+        searched_extra_input ? searched_extra_input.text_label : '',
+        [Validators.required],
+      ],
+      data_type: [
+        searched_extra_input ? searched_extra_input.data_type : 'string',
+        [Validators.required],
+      ],
+      is_required: [
+        searched_extra_input ? searched_extra_input.is_required + '' : 'true',
+        [Validators.required],
+      ],
+      order_in_form: [
+        searched_extra_input ? searched_extra_input.order_in_form : 1,
+        [Validators.required, Validators.min(1), Validators.max(1000)],
+      ],
+      is_multiple_select: [
+        searched_extra_input
+          ? searched_extra_input.is_multiple_select + ''
+          : 'false',
+        [Validators.required],
+      ],
+      options: this.formBuilder.array(selection_options),
+    });
+    return extraInputFormGroup;
   }
 
-  async searchViolation(violation_id: number, violation_type_id: number) {
+  async searchTicketInput(extra_input_id: number) {
     const loading = await this.utility.createIonLoading();
     await loading.present();
     let err = false;
-    let violation: any = await this.apiService
-      .getViolationDetails(violation_id, violation_type_id)
+    let extra_input: any = await this.apiService
+      .getExtraInputDetails(extra_input_id)
       .catch(async (res) => {
         err = await this.utility.alertErrorStatus(res);
         return null;
       });
-    if (!violation || !violation.data) {
+    if (!extra_input || !extra_input.data) {
       loading.dismiss();
       return;
     }
-    this.showViolationFormModal(
+    this.showTicketInputFormModal(
       false,
       true,
-      violation_id,
-      violation_type_id,
-      violation.data
+      extra_input_id,
+      extra_input.data
     ).finally(() => {
       loading.dismiss();
     });
@@ -534,19 +493,13 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     dt.rows().remove();
     this.search_phrase = value + '';
 
-    const violations = await this.fetchViolations(
-      1,
-      10,
-      'DESC',
-      this.search_phrase
-    );
-    if (violations && violations.data) {
-      this.current_page = violations.meta.current_page;
-      this.last_page = violations.meta.last_page;
-      let new_data = violations.data;
+    const extra_inputs = await this.fetchTicketInputs(null, this.search_phrase);
+    if (extra_inputs && extra_inputs.data) {
+      // this.current_page = extra_inputs.meta.current_page;
+      // this.last_page = extra_inputs.meta.last_page;
+      let new_data = extra_inputs.data;
       let new_rows = this.formatTableData(new_data);
       this.addNewTableData(new_rows);
-      await this.checkForScrollbar(true);
     }
 
     this.isSearching = false;
@@ -561,41 +514,50 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       .data();
     let ids_array = old_row_id.split(':');
 
-    const violation_id: number = +ids_array[0];
-    const violation_type_id: number = +ids_array[1];
-    const code_index =
+    const extra_input_id: number = +ids_array[0];
+    const ticketExtraProperties_count: number = +ids_array[1];
+    const violatorExtraProperties_count: number = +ids_array[2];
+
+    const status_index =
+      this.colReorder && this.colReorder.length > 0
+        ? this.colReorder.indexOf(6)
+        : 6;
+    const status = dtInstance
+      .cell({ row: row_index, column: status_index })
+      .data();
+
+    const label_index =
       this.colReorder && this.colReorder.length > 0
         ? this.colReorder.indexOf(1)
         : 1;
-    const code = dtInstance.cell({ row: row_index, column: code_index }).data();
+    const label = dtInstance
+      .cell({ row: row_index, column: label_index })
+      .data();
     let items = [];
 
     const viewEditOption = {
       label: 'VIEW & EDIT',
       icon: 'open-outline',
       callback: async () => {
-        await this.searchViolation(violation_id, violation_type_id);
+        await this.searchTicketInput(extra_input_id);
       },
     };
 
     const toggleActiveOption = {
-      label: ids_array[2] == 'ACTIVE' ? 'SET TO NOT ACTIVE' : 'SET TO ACTIVE',
+      label: status == 'ACTIVE' ? 'SET TO NOT ACTIVE' : 'SET TO ACTIVE',
       icon: 'toggle-outline',
       callback: async () => {
-        await this.toggleStatus(violation_id, violation_type_id, row_index);
+        await this.toggleStatus(extra_input_id, row_index);
       },
     };
 
     const deleteOption =
-      +ids_array[3] === 0
+      ticketExtraProperties_count === 0 && violatorExtraProperties_count === 0
         ? {
             label: 'DELETE',
             icon: 'trash-outline',
             callback: async () => {
-              await this.confirmDeleteViolation(
-                violation_id,
-                violation_type_id
-              );
+              await this.confirmDeleteTicketInput(extra_input_id);
             },
           }
         : null;
@@ -605,7 +567,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     if (deleteOption) items.push(deleteOption);
 
     const componentProps = {
-      title: 'Violation ' + code,
+      title: "Input Field '" + label + "'",
       subtitle: 'Select Action',
       isForm: false,
       items: items,
@@ -624,27 +586,25 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return await popover.present();
   }
 
-  async showViolationFormModal(
+  async showTicketInputFormModal(
     toCreate: boolean = true,
     toUpdate: boolean = false,
-    violation_id: number = null,
-    violation_type_id: number = null,
-    violation = null
+    extra_input_id: number = null,
+    user = null
   ) {
-    const data = await this.resolveViolationModalData(violation, toCreate);
+    const data = await this.resolveTicketInputModalData(user);
     if (!data) return;
     const modal = await this.modalController.create({
-      component: ViolationFormModalComponent,
+      component: ExtraInputFormModalComponent,
       backdropDismiss: false,
       componentProps: {
-        title: toCreate ? 'New Violation' : 'Update Violation',
-        new_violation: toCreate,
-        update_violation: toUpdate,
+        title: toCreate ? 'New Input Field' : 'Update Input Field',
+        new_extra_input: toCreate,
+        update_extra_input: toUpdate,
         modalCtrl: this.modalController,
-        searched_violation: violation,
-        violationFormGroup: data,
-        violation_id: violation_id,
-        violation_type_id: violation_type_id,
+        searched_extra_input: user,
+        extraInputFormGroup: data,
+        extra_input_id: extra_input_id,
       },
     });
 
@@ -657,22 +617,18 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return await modal.present();
   }
 
-  async toggleStatus(
-    violation_id: number,
-    violation_type_id: number,
-    row_index: number
-  ) {
+  async toggleStatus(extra_input_id: number, row_index: number) {
     this.popoverController.dismiss();
     const loading = await this.utility.createIonLoading();
     await loading.present();
     const status = await this.apiService
-      .toggleViolationStatus(violation_id, violation_type_id)
+      .deleteExtraInput(extra_input_id, false)
       .then(
         (res: any) => {
           return res.update_status;
         },
         async (res) => {
-          return false;
+          return await this.utility.alertErrorStatus(res);
         }
       );
     loading.dismiss();
@@ -695,19 +651,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
       dtInstance
         .cell({ row: row_index, column: status_index })
         .data(new_status);
-      let old_row_id: string = dtInstance
-        .cell({ row: row_index, column: 0 })
-        .data();
-
-      let new_row_id: string = old_row_id.replace(old_status, new_status);
-
-      dtInstance.cell({ row: row_index, column: 0 }).data(new_row_id);
-      return;
     }
-    const alert = await this.utility.alertMessage(
-      'Violation failed to change active status.'
-    );
-    return await alert.present();
+    return;
   }
 
   async toggleColumnVisibility(index: number) {
