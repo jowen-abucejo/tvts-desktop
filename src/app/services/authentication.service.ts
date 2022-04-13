@@ -12,6 +12,8 @@ import { StorageService, TOKEN_KEY } from './storage.service';
 export class AuthenticationService {
   isAuthenticated: BehaviorSubject<boolean> = new BehaviorSubject(null);
   isSuAuthenticated: BehaviorSubject<boolean> = new BehaviorSubject(null);
+  isAdmin: BehaviorSubject<boolean> = new BehaviorSubject(null);
+  isTreasury: BehaviorSubject<boolean> = new BehaviorSubject(null);
   public token: any = {};
   public api: BehaviorSubject<{ domain: string; version: string }> =
     new BehaviorSubject({ domain: '', version: '' });
@@ -57,6 +59,8 @@ export class AuthenticationService {
       .toPromise();
     this.token = JSON.parse(token_stored);
     if (this.token !== null && this.token.expired_at > Date.now()) {
+      this.isAdmin.next(this.token.data.isAdmin);
+      this.isTreasury.next(this.token.data.isTreasury);
       this.isAuthenticated.next(true);
     } else {
       logout_fallback ? this.logout() : '';
@@ -117,7 +121,9 @@ export class AuthenticationService {
           }
         )
         .toPromise()
-        .catch(() => {});
+        .catch((res) => {
+          return null;
+        });
     }
     this.storage.remove(TOKEN_KEY);
     this.isAuthenticated.next(false);

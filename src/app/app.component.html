@@ -42,11 +42,14 @@
       </ion-header>
       <ion-content color="light">
         <ion-list color="light">
-          <ion-item-group>
+          <ion-item-group [hidden]="!isAdmin && !isTreasury">
             <ion-item-divider>
               <ion-label>Manage Records</ion-label>
             </ion-item-divider>
-            <ion-menu-toggle menu="side-menu" auto-hide="false"
+            <ion-menu-toggle
+              menu="side-menu"
+              auto-hide="false"
+              [hidden]="!isAdmin"
               ><ion-item
                 [routerLink]="['/home']"
                 routerLinkActive="router-link-active"
@@ -56,7 +59,10 @@
                 <ion-label>Analytics</ion-label>
               </ion-item></ion-menu-toggle
             >
-            <ion-menu-toggle menu="side-menu" auto-hide="false"
+            <ion-menu-toggle
+              menu="side-menu"
+              auto-hide="false"
+              [hidden]="!isAdmin"
               ><ion-item
                 [routerLink]="['/tickets']"
                 routerLinkActive="router-link-active"
@@ -65,7 +71,10 @@
                 <ion-label>Citation Tickets</ion-label>
               </ion-item>
             </ion-menu-toggle>
-            <ion-menu-toggle menu="side-menu" auto-hide="false"
+            <ion-menu-toggle
+              menu="side-menu"
+              auto-hide="false"
+              [hidden]="!isAdmin"
               ><ion-item
                 [routerLink]="['/violations']"
                 routerLinkActive="router-link-active"
@@ -74,7 +83,10 @@
                 <ion-label>Violations</ion-label>
               </ion-item>
             </ion-menu-toggle>
-            <ion-menu-toggle menu="side-menu" auto-hide="false"
+            <ion-menu-toggle
+              menu="side-menu"
+              auto-hide="false"
+              [hidden]="!isTreasury"
               ><ion-item
                 [routerLink]="['/payments']"
                 routerLinkActive="router-link-active"
@@ -83,7 +95,10 @@
                 <ion-label>Payments</ion-label>
               </ion-item></ion-menu-toggle
             >
-            <ion-menu-toggle menu="side-menu" auto-hide="false"
+            <ion-menu-toggle
+              menu="side-menu"
+              auto-hide="false"
+              [hidden]="!isAdmin"
               ><ion-item
                 [routerLink]="['/users']"
                 routerLinkActive="router-link-active"
@@ -93,7 +108,7 @@
               </ion-item></ion-menu-toggle
             >
           </ion-item-group>
-          <ion-item-group>
+          <ion-item-group [hidden]="!isAdmin">
             <ion-item-divider>
               <ion-label>Advance Settings</ion-label>
             </ion-item-divider>

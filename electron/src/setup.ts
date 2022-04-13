@@ -211,8 +211,8 @@ export class ElectronCapacitorApp {
           this.CapacitorFileConfig.electron?.splashScreenImageName ??
             'splash.png'
         ),
-        windowWidth: 400,
-        windowHeight: 400,
+        windowWidth: 480,
+        windowHeight: 480,
       });
       this.SplashScreen.init(this.loadMainWindow, this);
     } else {

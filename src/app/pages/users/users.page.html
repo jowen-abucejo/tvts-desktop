@@ -71,11 +71,20 @@
       <ion-button (click)="reloadPage()" title="Refresh">
         <ion-icon slot="end" name="refresh-outline"></ion-icon>
       </ion-button>
+      <ion-button (click)="showSideMenu()" title="Customize Export">
+        <ion-icon slot="end" name="settings-outline"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 <ion-content scrollY="false" class="ion-padding">
-  <ion-content id="userTable" scrollX="true" #tableContent>
+  <app-table-export-menu
+    [menu_id]="export_menu_id"
+    [content_id]="export_content_id"
+    (fetchPDFHeader)="updatePDFHeaderTemplate($event)"
+    (fetchExportSetup)="updateExportSetup($event)"
+  ></app-table-export-menu>
+  <ion-content [id]="export_content_id" scrollX="true" #tableContent>
     <div
       style="width: 100%; height: 100%; display: flex; flex-direction: column"
       class="ion-align-items-center ion-justify-content-center"

@@ -2,13 +2,15 @@ import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   IonContent,
+  MenuController,
   ModalController,
   PopoverController,
   ViewWillLeave,
 } from '@ionic/angular';
 import { DataTableDirective } from 'angular-datatables';
 import { take } from 'rxjs/operators';
-import { ViolationFormModalComponent } from 'src/app/modules/shared/violation-form-modal/violation-form-modal.component';
+import { ExportPageSetup } from '../../modules/shared/table-export-menu/table-export-menu.component';
+import { ViolationFormModalComponent } from '../../modules/shared/violation-form-modal/violation-form-modal.component';
 import { PopoverComponent } from '../../modules/shared/popover/popover.component';
 import { ApiService } from '../../services/api.service';
 import { StorageService } from '../../services/storage.service';
@@ -61,6 +63,11 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   toggleModels = [false, true, true, true, true, true, true];
   colReorder = [];
   cachedColReorder = [];
+  pdfHeader: string;
+  export_content_id: string = 'violationTable';
+  export_menu_id: string = 'violationTableExportMenu';
+  export_setup: ExportPageSetup;
+
   /*table structure START HERE*/
   rows = [];
   dtOptions = {
@@ -93,6 +100,12 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
         exportOptions: {
           columns: ':visible',
         },
+        title: () => {
+          return this.export_setup.page_title;
+        },
+        messageTop: () => {
+          return this.export_setup.page_subtitle;
+        },
       },
       {
         extend: 'pdf',
@@ -100,15 +113,88 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
         exportOptions: {
           columns: ':visible',
         },
-        orientation: 'portrait',
-        customize: function (doc) {
+        customize: (doc) => {
+          doc.pageMargins = [38, 120, 38, 38];
+          doc.defaultStyle.alignment = 'center';
+          doc.pageOrientation = this.export_setup.page_orientation;
+          doc.pageSize = this.export_setup.page_size;
+          doc.content[0] = {
+            text: this.export_setup.page_title,
+            style: { fontSize: 14, bold: true },
+            margin: this.export_setup.page_title ? [0, 0, 0, 15] : 0,
+          };
           doc.content[1].table.widths = Array(
             doc.content[1].table.body[0].length + 1
           )
             .join('*')
             .split('');
-          doc.defaultStyle.alignment = 'center';
+          if (this.export_setup.page_subtitle) {
+            doc.content.splice(1, 0, {
+              text: this.export_setup.page_subtitle,
+              style: {
+                fontSize: 11,
+                bold: false,
+                lineHeight: 1.5,
+                alignment: 'left',
+              },
+              margin: [0, 0, 0, 15],
+            });
+          }
+          doc.images = this.pdfHeader ? { headerTemplate: this.pdfHeader } : {};
+          doc.header = {
+            columns: [
+              this.pdfHeader
+                ? {
+                    image: 'headerTemplate',
+                    height: 50,
+                    width: 50,
+                    absolutePosition: {
+                      x: -240,
+                      y: 35,
+                    },
+                  }
+                : '',
+              {
+                stack: [
+                  {
+                    columns: [
+                      {
+                        text: 'Republic of the Philippines',
+                        width: '*',
+                        style: { fontSize: 11 },
+                      },
+                    ],
+                  },
+                  {
+                    columns: [
+                      {
+                        text: 'Province of Cavite',
+                        width: '*',
+                        style: { fontSize: 11 },
+                      },
+                    ],
+                  },
+
+                  {
+                    columns: [
+                      {
+                        text: 'Municipality of Naic',
+                        width: '*',
+                        style: { fontSize: 15, bold: true },
+                      },
+                    ],
+                  },
+                ],
+                width: '*',
+              },
+            ],
+            margin: [this.pdfHeader ? -50 : 0, 38, 0, 38],
+          };
+          if (!this.pdfHeader) {
+            doc.header.columns.splice(0, 1);
+          }
         },
+        download: 'open',
       },
     ],
     columnDefs: [
@@ -128,6 +214,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     private utility: UtilityService,
     private storage: StorageService,
     private modalController: ModalController,
+    private menuController: MenuController,
     private formBuilder: FormBuilder
   ) {}
 
@@ -246,15 +333,8 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
   }
 
   async exportAs(index: number) {
-    const printable_columns = this.toggleModels
-      .map((v, i) => (v ? i : -1))
-      .filter((v) => v > -1);
-    (<any>this.datatableElement.dtOptions).buttons[
-      index
-    ].exportOptions.columns = printable_columns;
-    this.datatableElement.dtInstance.then((dtInstance: any) => {
-      dtInstance.table().button(index).trigger();
-    });
+    const dtInstance = <any>await this.datatableElement.dtInstance;
+    dtInstance.table().button(index).trigger();
   }
 
   private async fetchViolations(
@@ -486,7 +566,9 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
           : '',
         [
           Validators.required,
-          Validators.pattern(/^[1-9][0-9]*(,[1-9][0-9]*)*$/),
+          Validators.pattern(
+            /^[1-9][0-9]*(.[0-9]{2})?(,[1-9][0-9]*(.[0-9]{2})?)*$/
+          ),
         ],
       ],
     });
@@ -624,6 +706,11 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     return await popover.present();
   }
 
+  async showSideMenu() {
+    await this.menuController.enable(true, this.export_menu_id);
+    await this.menuController.toggle(this.export_menu_id);
+  }
+
   async showViolationFormModal(
     toCreate: boolean = true,
     toUpdate: boolean = false,
@@ -716,5 +803,13 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
     const v = col.visible();
     this.toggleModels[index] = !v;
     col.visible(!v);
+  }
+
+  updateExportSetup(e: ExportPageSetup) {
+    this.export_setup = e;
+  }
+
+  updatePDFHeaderTemplate(e) {
+    this.pdfHeader = e;
   }
 }

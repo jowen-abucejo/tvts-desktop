@@ -149,7 +149,7 @@ export class HomePage implements OnInit {
     this.ngOnInit();
   }
 
-  showRecentRecordsTally() {
+  async showRecentRecordsTally() {
     this.chart_statistics.total_tickets = this.rows.length; //total tickets in chart
     this.chart_statistics.violations = this.latest_violations;
     this.chart_statistics.total_violations = this.latest_violations

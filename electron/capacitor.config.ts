@@ -7,7 +7,7 @@ const config: ElectronCapacitorConfig = {
   bundledWebRuntime: false,
   electron: {
     splashScreenEnabled: true,
-    splashScreenImageName: 'splash.gif',
+    splashScreenImageName: 'splash2.gif',
     hideMainWindowOnLaunch: true,
   },
 };

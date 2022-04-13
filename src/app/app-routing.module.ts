@@ -1,9 +1,11 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { AutoLoginGuard } from './guards/auto-login.guard';
 import { IntroGuard } from './guards/intro.guard';
 import { SuGuard } from './guards/su.guard';
+import { TreasuryGuard } from './guards/treasury.guard';
 
 const routes: Routes = [
   {
@@ -26,7 +28,7 @@ const routes: Routes = [
     path: 'home',
     loadChildren: () =>
       import('./pages/home/home.module').then((m) => m.HomePageModule),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, AdminGuard],
   },
   {
     path: 'settings',
@@ -48,7 +50,7 @@ const routes: Routes = [
     path: 'tickets',
     loadChildren: () =>
       import('./pages/tickets/tickets.module').then((m) => m.TicketsPageModule),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, AdminGuard],
   },
   {
     path: 'violations',
@@ -56,7 +58,7 @@ const routes: Routes = [
       import('./pages/violations/violations.module').then(
         (m) => m.ViolationsPageModule
       ),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, AdminGuard],
   },
   {
     path: 'blank',
@@ -69,13 +71,13 @@ const routes: Routes = [
       import('./pages/payments/payments.module').then(
         (m) => m.PaymentsPageModule
       ),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, TreasuryGuard],
   },
   {
     path: 'users',
     loadChildren: () =>
       import('./pages/users/users.module').then((m) => m.UsersPageModule),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, AdminGuard],
   },
   {
     path: 'ticket-inputs',
@@ -83,7 +85,7 @@ const routes: Routes = [
       import('./pages/ticket-inputs/ticket-inputs.module').then(
         (m) => m.TicketInputsPageModule
       ),
-    canLoad: [AuthGuard],
+    canLoad: [AuthGuard, AdminGuard],
   },
 ];
 

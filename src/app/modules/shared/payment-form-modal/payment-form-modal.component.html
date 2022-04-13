@@ -10,109 +10,169 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" *ngIf="new_payment || update_payment">
-  <form [formGroup]="paymentFormGroup" (ngSubmit)="startPaymentAction()">
-    <ion-list>
-      <ion-list-header color="light">
-        <ion-label color="dark">PAYMENT DETAILS</ion-label>
-      </ion-list-header>
-      <ion-item [disabled]="update_payment">
-        <ion-label>Ticket Number</ion-label>
-        <ion-input
-          formControlName="ticket_number"
-          placeholder="Enter ticket number for this payment"
-        ></ion-input>
-      </ion-item>
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col
+        size="12"
+        class="ion-justify-content-center ion-align-items-center"
+      >
+        <form [formGroup]="paymentFormGroup" (ngSubmit)="startPaymentAction()">
+          <ion-list>
+            <ion-list-header color="light">
+              <ion-label color="dark">PAYMENT DETAILS</ion-label>
+            </ion-list-header>
+            <ion-item [disabled]="update_payment">
+              <ion-label>Ticket Number</ion-label>
+              <ion-input
+                formControlName="ticket_number"
+                placeholder="Enter ticket number for this payment"
+              ></ion-input>
+            </ion-item>
 
-      <ion-item>
-        <ion-label>Date & Time of Payment</ion-label>
-        <ion-datetime
-          display-format="DD.MMM.YYYY hh:mm:ss A"
-          formControlName="date_of_payment"
-        ></ion-datetime>
-      </ion-item>
+            <ion-item>
+              <ion-label>Date & Time of Payment</ion-label>
+              <ion-datetime
+                display-format="DD.MMM.YYYY hh:mm:ss A"
+                formControlName="date_of_payment"
+              ></ion-datetime>
+            </ion-item>
 
-      <ion-item-group>
-        <ion-item-divider>
-          <ion-label color="primary">Violations and Penalties</ion-label>
-        </ion-item-divider>
-        <ng-container *ngIf="update_payment">
-          <ion-item
-            *ngFor="
-              let violation of searched_payment.ticket.violations;
-              let i = index
-            "
+            <ion-item-group>
+              <ion-item-divider>
+                <ion-label color="primary">Violations and Penalties</ion-label>
+              </ion-item-divider>
+              <ng-container *ngIf="update_payment">
+                <ion-item
+                  *ngFor="
+                    let violation of searched_payment.ticket.violations;
+                    let i = index
+                  "
+                >
+                  <p class="ion-padding-start">
+                    {{ violation.violation }}
+                  </p>
+                  <ion-input
+                    step="0.01"
+                    min="0.00"
+                    max="100000.00"
+                    [formControl]="
+                      paymentFormGroup.controls.penalties.controls[i]
+                    "
+                    class="ion-text-right ion-padding-end"
+                  ></ion-input>
+                </ion-item>
+              </ng-container>
+              <ng-container *ngIf="new_payment">
+                <ion-item
+                  *ngFor="
+                    let violation of searched_ticket.violations;
+                    let i = index
+                  "
+                >
+                  <p class="ion-padding-start">
+                    {{ violation.violation }}
+                  </p>
+                  <ion-input
+                    type="number"
+                    step="0.01"
+                    min="0.00"
+                    max="100000.00"
+                    [formControl]="
+                      paymentFormGroup.controls.penalties.controls[i]
+                    "
+                    class="ion-text-right ion-padding-end"
+                  ></ion-input>
+                </ion-item>
+              </ng-container>
+            </ion-item-group>
+            <ion-item>
+              <ion-label>Total Amount</ion-label>
+              <ion-input
+                readonly="true"
+                type="number"
+                step="0.01"
+                min="0.00"
+                max="10000000.00"
+                formControlName="total_amount"
+                class="ion-text-right ion-padding-end"
+                style="font-weight: bold"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label>OR Number</ion-label>
+              <ion-input
+                formControlName="or_number"
+                placeholder="Enter OR number of this payment"
+              ></ion-input>
+            </ion-item>
+          </ion-list>
+          <ion-button
+            *ngIf="new_payment"
+            type="submit"
+            expand="block"
+            fill="solid"
+            class="ion-margin"
+            [disabled]="!paymentFormGroup.valid"
           >
-            <p class="ion-padding-start">
-              {{ violation.violation }}
-            </p>
-            <ion-input
-              type="number"
-              step="1"
-              min="0"
-              [formControl]="paymentFormGroup.controls.penalties.controls[i]"
-              class="ion-text-right ion-padding-end"
-            ></ion-input>
-          </ion-item>
-        </ng-container>
-        <ng-container *ngIf="new_payment">
-          <ion-item
-            *ngFor="let violation of searched_ticket.violations; let i = index"
+            Create
+          </ion-button>
+          <ion-button
+            *ngIf="update_payment"
+            type="submit"
+            expand="block"
+            fill="solid"
+            class="ion-margin"
+            [disabled]="paymentFormGroup.pristine || !paymentFormGroup.valid"
           >
-            <p class="ion-padding-start">
-              {{ violation.violation }}
-            </p>
-            <ion-input
-              type="number"
-              step="1"
-              min="0"
-              max="100000"
-              [formControl]="paymentFormGroup.controls.penalties.controls[i]"
-              class="ion-text-right ion-padding-end"
-            ></ion-input>
-          </ion-item>
-        </ng-container>
-      </ion-item-group>
-      <ion-item>
-        <ion-label>Total Amount</ion-label>
-        <ion-input
-          readonly="true"
-          type="number"
-          step="1"
-          min="0"
-          max="10000000"
-          formControlName="total_amount"
-          class="ion-text-right ion-padding-end"
-          style="font-weight: bold"
-        ></ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label>OR Number</ion-label>
-        <ion-input
-          formControlName="or_number"
-          placeholder="Enter OR number of this payment"
-        ></ion-input>
-      </ion-item>
-    </ion-list>
-    <ion-button
-      *ngIf="new_payment"
-      type="submit"
-      expand="block"
-      fill="solid"
-      class="ion-margin"
-      [disabled]="!paymentFormGroup.valid"
-    >
-      Create
-    </ion-button>
-    <ion-button
-      *ngIf="update_payment"
-      type="submit"
-      expand="block"
-      fill="solid"
-      class="ion-margin"
-      [disabled]="paymentFormGroup.pristine || !paymentFormGroup.valid"
-    >
-      Update
-    </ion-button>
-  </form>
+            Update
+          </ion-button>
+        </form>
+        <div id="orDiv">
+          <img
+            [src]="or_template"
+            alt=""
+            id="orTemplate"
+            width="384px"
+            height="783px"
+          />
+          <div id="orDetails">
+            <div class="or-item-list">
+              <div
+                *ngFor="
+                  let violation of searched_ticket.violations;
+                  let i = index
+                "
+              >
+                <div class="or-item">
+                  {{ violation.violation }}
+                </div>
+                <div class="or-item-amount">
+                  {{
+                    paymentFormGroup.controls.penalties.controls[i].value
+                      | number: "1.2-2"
+                  }}
+                </div>
+              </div>
+              <div class="or-item-footer">
+                <div>
+                  {{
+                    paymentFormGroup.controls.total_amount.value
+                      | number: "1.2-2"
+                  }}
+                </div>
+                <div class="">
+                  {{
+                    toWords
+                      .convert(paymentFormGroup.controls.total_amount.value)
+                      .replace("Dollar", "Peso")
+                  }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

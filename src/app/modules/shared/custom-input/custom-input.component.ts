@@ -7,6 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { AlertController, ViewDidLeave } from '@ionic/angular';
@@ -56,7 +57,8 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
 
   constructor(
     private alertCtrl: AlertController,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private domSanitizer: DomSanitizer
   ) {}
   ionViewDidLeave(): void {
     // delete saved image when page destroy
@@ -66,8 +68,9 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
   }
 
   ngOnInit() {
-    if (this.disabled && this.type === 'image') {
-      this.requestImage(this.parentForm.get(this.controller).value);
+    if (this.type === 'image') {
+      const raw_image = this.parentForm.get(this.controller).value;
+      if (raw_image) this.requestImage(raw_image);
     }
   }
 
@@ -158,11 +161,14 @@ export class CustomInputComponent implements OnInit, ViewDidLeave, OnDestroy {
   }
 
   private createImageFromBlob(image: Blob) {
+    let requestedImage: any;
     let reader = new FileReader();
     reader.addEventListener(
       'load',
       () => {
-        this.imageData = reader.result;
+        requestedImage = reader.result;
+        requestedImage.substr(requestedImage.indexOf(', ') + 1);
+        this.imageData = requestedImage.replace('text/html', 'image/jpeg');
       },
       false
     );

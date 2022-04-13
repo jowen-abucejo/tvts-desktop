@@ -14,6 +14,9 @@ export class AppComponent {
     this.canShowPane = window.innerWidth >= 1200; //check if on lg screens
   }
   isAuthenticated = false;
+  isAdmin = false;
+  isTreasury = false;
+
   disabled = false;
   canShowPane = true;
 
@@ -22,6 +25,21 @@ export class AppComponent {
     private auth: AuthenticationService,
     private router: Router
   ) {
+    this.auth.isAdmin
+      .pipe(
+        map((isAdmin) => {
+          this.isAdmin = isAdmin;
+        })
+      )
+      .subscribe();
+
+    this.auth.isTreasury
+      .pipe(
+        map((isTreasury) => {
+          this.isTreasury = isTreasury;
+        })
+      )
+      .subscribe();
     this.auth.isAuthenticated
       .pipe(
         map((isAuthenticated) => {

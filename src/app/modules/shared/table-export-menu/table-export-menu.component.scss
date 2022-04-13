@@ -1,0 +1,8 @@
+ion-label,
+ion-item > ion-label {
+  color: var(--ion-color-primary);
+}
+
+ion-item {
+  --highlight-color-valid: var(--ion-color-primary);
+}

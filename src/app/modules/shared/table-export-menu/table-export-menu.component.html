@@ -1,0 +1,121 @@
+<ion-menu
+  side="end"
+  contentId="{{ content_id }}"
+  type="overlay"
+  menuId="{{ menu_id }}"
+>
+  <ion-header>
+    <ion-toolbar translucent color="tertiary">
+      <ion-title>{{ title }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list color="light">
+      <form [formGroup]="headerTemplateForm" (ngSubmit)="saveExportSetting()">
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label color="primary">PDF Header Logo</ion-label>
+          </ion-item-divider>
+          <ion-item lines="full">
+            <ion-thumbnail slot="start" *ngIf="pdfHeader">
+              <ion-img [src]="pdfHeader"></ion-img>
+            </ion-thumbnail>
+            <ion-label class="ion-text-center" *ngIf="pdfHeader && preview_data"
+              >Change to</ion-label
+            >
+            <ion-label
+              class="ion-text-center"
+              *ngIf="!pdfHeader && preview_data"
+              >Use</ion-label
+            >
+            <p
+              style="color: var(--ion-color-danger); text-align: center"
+              *ngIf="!pdfHeader && !preview_data"
+            >
+              Logo Not Set
+            </p>
+            <ion-thumbnail slot="end" *ngIf="preview_data">
+              <ion-img [src]="preview_data"></ion-img>
+            </ion-thumbnail>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              formControlName="selectedImage"
+              type="file"
+              accept="image/jpeg, image/png"
+              (change)="imagePreview($event)"
+            ></ion-input>
+          </ion-item>
+          <ion-button
+            type="submit"
+            expand="block"
+            fill="solid"
+            class="ion-margin"
+            [disabled]="!headerTemplateForm.valid"
+          >
+            Set Logo
+          </ion-button>
+          <ion-button
+            size="small"
+            expand="block"
+            fill="solid"
+            class="ion-margin"
+            [disabled]="!pdfHeader"
+            color="danger"
+            (click)="deleteLogo()"
+          >
+            Clear Logo
+          </ion-button>
+        </ion-item-group>
+      </form>
+
+      <form
+        (ngSubmit)="saveExportSetting(true)"
+        [formGroup]="exportPageSetupForm"
+      >
+        <ion-item-group>
+          <ion-item-divider>
+            <ion-label color="primary">Page Settings</ion-label>
+          </ion-item-divider>
+
+          <ion-item>
+            <ion-label position="floating">Title</ion-label>
+            <ion-input formControlName="page_title"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">SubTitle</ion-label>
+            <ion-textarea formControlName="page_subtitle"> </ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Page Orientation</ion-label>
+            <ion-select formControlName="page_orientation" interface="popover">
+              <ion-select-option value="portrait">Portrait</ion-select-option>
+              <ion-select-option value="landscape">Landscape</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Page Size</ion-label>
+            <ion-select formControlName="page_size" interface="popover">
+              <ion-select-option value="A5">A5</ion-select-option>
+              <ion-select-option value="A4">A4</ion-select-option>
+              <ion-select-option value="A3">A3</ion-select-option>
+              <ion-select-option value="LETTER">Letter</ion-select-option>
+              <ion-select-option value="LEGAL">Legal</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-button
+            type="submit"
+            expand="block"
+            fill="solid"
+            class="ion-margin"
+            [disabled]="
+              !exportPageSetupForm.valid || exportPageSetupForm.pristine
+            "
+          >
+            Save Settings
+          </ion-button>
+        </ion-item-group>
+      </form>
+    </ion-list>
+  </ion-content>
+</ion-menu>

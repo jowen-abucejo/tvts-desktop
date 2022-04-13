@@ -10,13 +10,15 @@ import {
 } from '@angular/forms';
 import {
   IonContent,
+  MenuController,
   ModalController,
   PopoverController,
   ViewWillLeave,
 } from '@ionic/angular';
 import { DataTableDirective } from 'angular-datatables';
 import { take } from 'rxjs/operators';
-import { PaymentFormModalComponent } from 'src/app/modules/shared/payment-form-modal/payment-form-modal.component';
+import { ExportPageSetup } from '../../modules/shared/table-export-menu/table-export-menu.component';
+import { PaymentFormModalComponent } from '../../modules/shared/payment-form-modal/payment-form-modal.component';
 import { PopoverComponent } from '../../modules/shared/popover/popover.component';
 import { ApiService } from '../../services/api.service';
 import { StorageService } from '../../services/storage.service';
@@ -104,6 +106,10 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
   toggleModels = [false, true, true, true, true, true];
   colReorder = [];
   cachedColReorder = [];
+  pdfHeader: string;
+  export_content_id: string = 'paymentTable';
+  export_menu_id: string = 'paymentTableExportMenu';
+  export_setup: ExportPageSetup;
 
   /*table structure START HERE*/
   rows = [];
@@ -137,6 +143,12 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
         exportOptions: {
           columns: ':visible',
         },
+        title: () => {
+          return this.export_setup.page_title;
+        },
+        messageTop: () => {
+          return this.export_setup.page_subtitle;
+        },
       },
       {
         extend: 'pdf',
@@ -144,15 +156,88 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
         exportOptions: {
           columns: ':visible',
         },
-        orientation: 'landscape',
-        customize: function (doc) {
+        customize: (doc) => {
+          doc.pageMargins = [38, 120, 38, 38];
+          doc.defaultStyle.alignment = 'center';
+          doc.pageOrientation = this.export_setup.page_orientation;
+          doc.pageSize = this.export_setup.page_size;
+          doc.content[0] = {
+            text: this.export_setup.page_title,
+            style: { fontSize: 14, bold: true },
+            margin: this.export_setup.page_title ? [0, 0, 0, 15] : 0,
+          };
           doc.content[1].table.widths = Array(
             doc.content[1].table.body[0].length + 1
           )
             .join('*')
             .split('');
-          doc.defaultStyle.alignment = 'center';
+          if (this.export_setup.page_subtitle) {
+            doc.content.splice(1, 0, {
+              text: this.export_setup.page_subtitle,
+              style: {
+                fontSize: 11,
+                bold: false,
+                lineHeight: 1.5,
+                alignment: 'left',
+              },
+              margin: [0, 0, 0, 15],
+            });
+          }
+          doc.images = this.pdfHeader ? { headerTemplate: this.pdfHeader } : {};
+          doc.header = {
+            columns: [
+              this.pdfHeader
+                ? {
+                    image: 'headerTemplate',
+                    height: 50,
+                    width: 50,
+                    absolutePosition: {
+                      x: -240,
+                      y: 35,
+                    },
+                  }
+                : '',
+              {
+                stack: [
+                  {
+                    columns: [
+                      {
+                        text: 'Republic of the Philippines',
+                        width: '*',
+                        style: { fontSize: 11 },
+                      },
+                    ],
+                  },
+                  {
+                    columns: [
+                      {
+                        text: 'Province of Cavite',
+                        width: '*',
+                        style: { fontSize: 11 },
+                      },
+                    ],
+                  },
+
+                  {
+                    columns: [
+                      {
+                        text: 'Municipality of Naic',
+                        width: '*',
+                        style: { fontSize: 15, bold: true },
+                      },
+                    ],
+                  },
+                ],
+                width: '*',
+              },
+            ],
+            margin: [this.pdfHeader ? -50 : 0, 38, 0, 38],
+          };
+          if (!this.pdfHeader) {
+            doc.header.columns.splice(0, 1);
+          }
         },
+        download: 'open',
       },
     ],
     columnDefs: [
@@ -173,7 +258,8 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
     private popoverController: PopoverController,
     private storage: StorageService,
     private formBuilder: FormBuilder,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private menuController: MenuController
   ) {}
 
   async ngOnInit() {
@@ -347,16 +433,7 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
 
   async exportAs(index: number) {
     const dtInstance = <any>await this.datatableElement.dtInstance;
-    this.toggleModels = dtInstance.table().columns().visible();
-    const printable_columns = this.toggleModels
-      .map((v, i) => (v ? i : -1))
-      .filter((v) => v > -1);
-    (<any>this.datatableElement.dtOptions).buttons[
-      index
-    ].exportOptions.columns = printable_columns;
-    this.datatableElement.dtInstance.then((dtInstance: any) => {
-      dtInstance.table().button(index).trigger();
-    });
+    dtInstance.table().button(index).trigger();
   }
 
   private async fetchPayments(
@@ -660,7 +737,7 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
 
     if (toCreate && searched_ticket) {
       let violations_penalties = [];
-      let total_amount = 0;
+      let total_amount = 0.0;
       searched_ticket.violations.forEach((violation) => {
         const type_length = violation.violation_types[0].penalties.length;
         const penalty = new FormControl(
@@ -669,9 +746,9 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
                 searched_ticket.offense_number - 1
               ]
             : violation.violation_types[0].penalties[type_length - 1],
-          [Validators.required, Validators.min(0), Validators.max(100000)]
+          [Validators.required, Validators.min(0.01), Validators.max(100000.0)]
         );
-        total_amount += parseInt(penalty.value);
+        total_amount += parseFloat(penalty.value);
         violations_penalties.push(penalty);
       });
       paymentFormGroup = this.formBuilder.group({
@@ -695,8 +772,8 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
         if (amount !== '') {
           const penalty = new FormControl(amount, [
             Validators.required,
-            Validators.min(0),
-            Validators.max(100000),
+            Validators.min(0.0),
+            Validators.max(100000.0),
           ]);
           violations_penalties.push(penalty);
         }
@@ -714,7 +791,11 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
         penalties: this.formBuilder.array(violations_penalties),
         total_amount: [
           searched_payment.total_amount,
-          [Validators.required, Validators.min(0), Validators.max(10000000)],
+          [
+            Validators.required,
+            Validators.min(0.0),
+            Validators.max(10000000.0),
+          ],
         ],
       });
     }
@@ -922,11 +1003,24 @@ export class PaymentsPage implements OnInit, ViewWillLeave {
     return await popover.present();
   }
 
+  async showSideMenu() {
+    await this.menuController.enable(true, this.export_menu_id);
+    await this.menuController.toggle(this.export_menu_id);
+  }
+
   async toggleColumnVisibility(index: number) {
     if (!this.datatableElement) return;
     const col = (await this.datatableElement.dtInstance).column(index);
     const v = col.visible();
     this.toggleModels[index] = !v;
     col.visible(!v);
+  }
+
+  async updateExportSetup(e: ExportPageSetup) {
+    this.export_setup = e;
+  }
+
+  updatePDFHeaderTemplate(e) {
+    this.pdfHeader = e;
   }
 }

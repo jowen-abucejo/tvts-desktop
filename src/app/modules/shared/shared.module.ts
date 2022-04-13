@@ -10,6 +10,7 @@ import { ViolationFormModalComponent } from './violation-form-modal/violation-fo
 import { PaymentFormModalComponent } from './payment-form-modal/payment-form-modal.component';
 import { UserFormModalComponent } from './user-form-modal/user-form-modal.component';
 import { ExtraInputFormModalComponent } from './extra-input-form-modal/extra-input-form-modal.component';
+import { TableExportMenuComponent } from './table-export-menu/table-export-menu.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { ExtraInputFormModalComponent } from './extra-input-form-modal/extra-inp
     PaymentFormModalComponent,
     UserFormModalComponent,
     ExtraInputFormModalComponent,
+    TableExportMenuComponent,
   ],
   imports: [
     CommonModule,
@@ -37,6 +39,7 @@ import { ExtraInputFormModalComponent } from './extra-input-form-modal/extra-inp
     PaymentFormModalComponent,
     UserFormModalComponent,
     ExtraInputFormModalComponent,
+    TableExportMenuComponent,
   ],
 })
 export class SharedModule {}

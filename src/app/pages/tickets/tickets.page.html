@@ -97,29 +97,20 @@
       <ion-button (click)="reloadPage()" title="Refresh">
         <ion-icon slot="end" name="refresh-outline"></ion-icon>
       </ion-button>
-      <!-- <ion-button (click)="showSideMenu('side-menu2')" title="Table Settings">
+      <ion-button (click)="showSideMenu()" title="Customize Export">
         <ion-icon slot="end" name="settings-outline"></ion-icon>
-      </ion-button> -->
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 <ion-content scrollY="false" class="ion-padding">
-  <!-- <ion-menu
-    side="end"
-    content-id="ticketTable"
-    type="overlay"
-    menuId="side-menu2"
-  >
-    <ion-header>
-      <ion-toolbar translucent color="tertiary">
-        <ion-title>Hide/Show Columns</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-list class="ion-padding-end" color="light"> </ion-list>
-    </ion-content>
-  </ion-menu> -->
-  <ion-content id="ticketTable" scrollX="true" #tableContent>
+  <app-table-export-menu
+    [menu_id]="export_menu_id"
+    [content_id]="export_content_id"
+    (fetchPDFHeader)="updatePDFHeaderTemplate($event)"
+    (fetchExportSetup)="updateExportSetup($event)"
+  ></app-table-export-menu>
+  <ion-content [id]="export_content_id" scrollX="true" #tableContent>
     <div
       style="width: 100%; height: 100%; display: flex; flex-direction: column"
       class="ion-align-items-center ion-justify-content-center"

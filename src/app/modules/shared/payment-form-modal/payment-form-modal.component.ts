@@ -6,6 +6,10 @@ import { ViewDidLeave } from '@ionic/angular';
 
 import { ApiService } from 'src/app/services/api.service';
 import { UtilityService } from 'src/app/services/utility.service';
+import pdfMake from 'pdfmake/build/pdfmake';
+import * as htmlToImage from 'html-to-image';
+import { CustomPageSize, TDocumentDefinitions } from 'pdfmake/interfaces';
+import { ToWords } from 'to-words';
 @Component({
   selector: 'app-payment-form-modal',
   templateUrl: './payment-form-modal.component.html',
@@ -26,6 +30,8 @@ export class PaymentFormModalComponent
   private loading: HTMLIonLoadingElement;
   formData: FormData;
   formReady: boolean = false;
+  or_template: string = '';
+  toWords: any;
 
   constructor(
     private apiService: ApiService,
@@ -35,15 +41,25 @@ export class PaymentFormModalComponent
   ionViewDidLeave(): void {}
 
   ngOnInit() {
+    this.toWords = new ToWords({
+      localeCode: 'en-US',
+      converterOptions: {
+        currency: true,
+        ignoreDecimal: false,
+        ignoreZeroCurrency: false,
+        doNotAddOnly: false,
+      },
+    });
     this.paymentFormGroup.controls?.penalties.valueChanges.subscribe(
       (value) => {
-        let total_amount = 0;
+        let total_amount = 0.0;
         value.forEach((element) => {
-          if (element) total_amount += parseInt(element);
+          if (element) total_amount += parseFloat(element);
         });
         this.paymentFormGroup.controls?.total_amount.setValue(total_amount);
       }
     );
+    this.getBase64Data();
   }
 
   ngOnDestroy() {}
@@ -110,6 +126,44 @@ export class PaymentFormModalComponent
     await alert.present();
   }
 
+  async getBase64Data() {
+    const res = await fetch('../../../../assets/OR Template.jpg');
+    const blob = await res.blob();
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.or_template = reader.result as string;
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  async generateReceipt() {
+    const dataUrl = await htmlToImage.toPng(
+      document.getElementById('orDetails'),
+      { backgroundColor: 'transparent', quality: 1 }
+    );
+
+    const documentDefinition: TDocumentDefinitions = {
+      pageMargins: [0, 0, 0, 0],
+      pageSize: <CustomPageSize>{ width: 288, height: 586 },
+      background: [
+        {
+          image: this.or_template,
+          fit: [288, 586],
+          margin: [0, 0],
+        },
+      ],
+      content: [
+        {
+          // you'll most often use dataURI images on the browser side
+          // if no width/height/fit is provided, the original size will be used
+          image: dataUrl,
+          fit: [288, 586],
+        },
+      ],
+    };
+    pdfMake.createPdf(documentDefinition).open();
+  }
   //save violation details to server
   async savePaymentDetails() {
     this.loading = await this.utility.createIonLoading();
@@ -121,6 +175,7 @@ export class PaymentFormModalComponent
         .then(
           //redirect on success
           async (data) => {
+            await this.generateReceipt();
             const alert = await this.utility.alertMessage(
               'Payment Created Successfully!'
             );
@@ -143,6 +198,7 @@ export class PaymentFormModalComponent
         .updatePayment(this.formData, this.searched_payment.id)
         .then(
           async (data) => {
+            await this.generateReceipt();
             const alert = await this.utility.alertMessage(
               'Violation Updated Successfully!'
             );
@@ -165,12 +221,9 @@ export class PaymentFormModalComponent
     this.formData = new FormData();
     for (const key in this.paymentFormGroup.value) {
       this.formData.append(key, this.paymentFormGroup.get(key).value);
-      console.log(
-        '🚀 ~ file: payment-form-modal.component.ts ~ line 170 ~startPaymentAction ~  this.paymentFormGroup.get(key).value',
-        this.paymentFormGroup.get(key).value
-      );
     }
     //prompt user to enter password
-    await this.confirmPaymentAction();
+    // await this.confirmPaymentAction();
+    await this.savePaymentDetails();
   }
 }

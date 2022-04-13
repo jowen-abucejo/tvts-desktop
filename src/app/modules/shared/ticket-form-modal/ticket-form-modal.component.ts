@@ -87,10 +87,7 @@ export class TicketFormModalComponent
     this.searched_ticket.violator.extra_properties.forEach((extra_input) => {
       const prop_name = extra_input.propertyDescription.property;
       const value =
-        extra_input.property_value != 'null' &&
-        extra_input.propertyDescription.data_type != 'image'
-          ? extra_input.property_value
-          : '';
+        extra_input.property_value != 'null' ? extra_input.property_value : '';
       this.ticketFormGroup.addControl(
         prop_name,
         new FormControl(
@@ -105,10 +102,7 @@ export class TicketFormModalComponent
     this.searched_ticket.extra_properties.forEach((extra_input) => {
       const prop_name = extra_input.propertyDescription.property;
       const value =
-        extra_input.property_value != 'null' &&
-        extra_input.propertyDescription.data_type != 'image'
-          ? extra_input.property_value
-          : '';
+        extra_input.property_value != 'null' ? extra_input.property_value : '';
       this.ticketFormGroup.addControl(
         prop_name,
         new FormControl(

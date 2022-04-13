@@ -6,3 +6,72 @@ ion-item > ion-label {
 ion-item {
   --highlight-color-valid: var(--ion-color-primary);
 }
+
+#orDiv {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+#orDetails {
+  width: 384px;
+  height: 783px;
+  min-width: 384px;
+  max-height: 783px;
+  max-width: 384px;
+  min-height: 783px;
+  background-color: transparent;
+  z-index: 1;
+}
+
+#orTemplate {
+  z-index: 0;
+  position: absolute;
+}
+#orDetails > div.or-item-list {
+  line-height: 1;
+  position: relative;
+  top: 332px;
+  left: 23px;
+  color: rgb(54, 54, 54);
+  font-size: 12px;
+  font-stretch: condensed;
+}
+
+.or-item-list > div {
+  display: inline-flex;
+  margin: 0;
+  height: 23px;
+  width: 340px;
+}
+
+.or-item {
+  width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.or-item-amount {
+  margin-left: 10px;
+  width: 90px;
+  text-align: right;
+}
+.or-item-footer {
+  position: absolute;
+  display: block !important;
+  height: auto !important;
+  top: 185px;
+}
+.or-item-footer > div:first-child {
+  margin-left: 210px;
+  width: 90px;
+  height: 23px;
+  text-align: right;
+}
+.or-item-footer > div:last-child {
+  width: 340px;
+  height: 50px;
+  text-indent: 85px;
+  font-size: 13px;
+  line-height: 1.2;
+}
