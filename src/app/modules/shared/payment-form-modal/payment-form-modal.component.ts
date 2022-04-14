@@ -32,6 +32,8 @@ export class PaymentFormModalComponent
   formReady: boolean = false;
   or_template: string = '';
   toWords: any;
+  full_name: string = '';
+  export_on_submit: boolean = true;
 
   constructor(
     private apiService: ApiService,
@@ -41,6 +43,10 @@ export class PaymentFormModalComponent
   ionViewDidLeave(): void {}
 
   ngOnInit() {
+    const violator: any = this.new_payment
+      ? this.searched_ticket?.violator
+      : this.searched_payment?.ticket?.violator;
+    this.full_name = `${violator?.last_name} ${violator?.middle_name} ${violator?.first_name}`;
     this.toWords = new ToWords({
       localeCode: 'en-US',
       converterOptions: {
@@ -162,7 +168,13 @@ export class PaymentFormModalComponent
         },
       ],
     };
-    pdfMake.createPdf(documentDefinition).open();
+    pdfMake
+      .createPdf(documentDefinition)
+      .download('OR' + this.paymentFormGroup.controls.or_number.value + '.pdf');
+  }
+
+  toggleExport() {
+    this.export_on_submit = !this.export_on_submit;
   }
   //save violation details to server
   async savePaymentDetails() {
@@ -175,7 +187,7 @@ export class PaymentFormModalComponent
         .then(
           //redirect on success
           async (data) => {
-            await this.generateReceipt();
+            if (this.export_on_submit) await this.generateReceipt();
             const alert = await this.utility.alertMessage(
               'Payment Created Successfully!'
             );
@@ -198,7 +210,7 @@ export class PaymentFormModalComponent
         .updatePayment(this.formData, this.searched_payment.id)
         .then(
           async (data) => {
-            await this.generateReceipt();
+            if (this.export_on_submit) await this.generateReceipt();
             const alert = await this.utility.alertMessage(
               'Violation Updated Successfully!'
             );

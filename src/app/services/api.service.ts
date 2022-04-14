@@ -424,7 +424,7 @@ export class ApiService {
   getPaymentDetails(payment_id: number) {
     return this.http
       .get(
-        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_PAYMENT}/${payment_id}}`,
+        `${this.api.domain}/api/${this.api.version}/${API_URL.GET_ONE_PAYMENT}/${payment_id}`,
         {
           headers: this.auth.createHeaderWithToken(),
         }

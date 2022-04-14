@@ -194,6 +194,7 @@ export class TicketInputsPage implements OnInit, ViewWillLeave {
             doc.header.columns.splice(0, 1);
           }
         },
+        download: 'download',
       },
     ],
     columnDefs: [

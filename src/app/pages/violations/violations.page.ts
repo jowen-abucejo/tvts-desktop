@@ -194,7 +194,7 @@ export class ViolationsPage implements OnInit, ViewWillLeave {
             doc.header.columns.splice(0, 1);
           }
         },
-        download: 'open',
+        download: 'download',
       },
     ],
     columnDefs: [

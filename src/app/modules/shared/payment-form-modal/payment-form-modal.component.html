@@ -107,6 +107,18 @@
               ></ion-input>
             </ion-item>
           </ion-list>
+
+          <p class="ion-text-center">
+            <ion-checkbox
+              checked="true"
+              (ionChange)="toggleExport()"
+            ></ion-checkbox>
+            <ion-label
+              color="dark"
+              style="position: relative; top: -4px; left: 10px"
+              >Export O.R. on {{ new_payment ? "Create" : "Update" }}</ion-label
+            >
+          </p>
           <ion-button
             *ngIf="new_payment"
             type="submit"
@@ -128,7 +140,14 @@
             Update
           </ion-button>
         </form>
-        <div id="orDiv">
+
+        <hr class="ion-margin-vertical" style="border: 1px dashed gray" />
+        <ion-header *ngIf="export_on_submit">
+          <ion-toolbar color="primary">
+            <ion-title>Official Receipt Preview</ion-title>
+          </ion-toolbar>
+        </ion-header>
+        <div id="orDiv" *ngIf="export_on_submit">
           <img
             [src]="or_template"
             alt=""
@@ -137,7 +156,30 @@
             height="783px"
           />
           <div id="orDetails">
-            <div class="or-item-list">
+            <div class="or-content or-header">
+              <div>NAIC, CAVITE</div>
+              <div>
+                <div class="printable-text">
+                  {{
+                    paymentFormGroup.controls.date_of_payment.value
+                      | date: "shortDate"
+                  }}
+                </div>
+                <div>
+                  <b style="color: black">CAV</b
+                  ><b class="or-number">
+                    {{ paymentFormGroup.controls.or_number.value }}</b
+                  ><b style="color: black">B</b>
+                </div>
+                <div class="printable-text">
+                  {{ full_name }}
+                </div>
+              </div>
+            </div>
+            <div
+              class="or-item-list or-content printable-text"
+              *ngIf="new_payment"
+            >
               <div
                 *ngFor="
                   let violation of searched_ticket.violations;
@@ -154,14 +196,50 @@
                   }}
                 </div>
               </div>
-              <div class="or-item-footer">
+              <div class="or-item-total">
                 <div>
                   {{
                     paymentFormGroup.controls.total_amount.value
                       | number: "1.2-2"
                   }}
                 </div>
-                <div class="">
+                <div>
+                  {{
+                    toWords
+                      .convert(paymentFormGroup.controls.total_amount.value)
+                      .replace("Dollar", "Peso")
+                  }}
+                </div>
+              </div>
+            </div>
+            <div
+              class="or-item-list or-content printable-text"
+              *ngIf="update_payment"
+            >
+              <div
+                *ngFor="
+                  let violation of searched_payment.ticket.violations;
+                  let i = index
+                "
+              >
+                <div class="or-item">
+                  {{ violation.violation }}
+                </div>
+                <div class="or-item-amount">
+                  {{
+                    paymentFormGroup.controls.penalties.controls[i].value
+                      | number: "1.2-2"
+                  }}
+                </div>
+              </div>
+              <div class="or-item-total">
+                <div>
+                  {{
+                    paymentFormGroup.controls.total_amount.value
+                      | number: "1.2-2"
+                  }}
+                </div>
+                <div>
                   {{
                     toWords
                       .convert(paymentFormGroup.controls.total_amount.value)

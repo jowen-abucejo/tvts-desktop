@@ -149,7 +149,7 @@ export class ElectronCapacitorApp {
     this.MainWindow.setMaximizable(true);
     this.MainWindow.setMinimizable(true);
     this.MainWindow.setFullScreenable(true);
-    // this.mainWindowState.manage(this.MainWindow);
+    this.mainWindowState.manage(this.MainWindow);
 
     if (this.CapacitorFileConfig.backgroundColor) {
       this.MainWindow.setBackgroundColor(
