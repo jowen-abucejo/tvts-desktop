@@ -86,8 +86,17 @@ export class TicketFormModalComponent
     //fetch extra details needed for violator
     this.searched_ticket.violator.extra_properties.forEach((extra_input) => {
       const prop_name = extra_input.propertyDescription.property;
-      const value =
-        extra_input.property_value != 'null' ? extra_input.property_value : '';
+      let value: any = '';
+      if (
+        (extra_input.property_value != 'null' &&
+          extra_input.property_value != 'NULL') ||
+        extra_input.data_type == 'boolean'
+      ) {
+        value =
+          extra_input.propertyDescription.data_type == 'boolean'
+            ? extra_input.property_value == 'true'
+            : extra_input.property_value;
+      }
       this.ticketFormGroup.addControl(
         prop_name,
         new FormControl(
@@ -101,8 +110,17 @@ export class TicketFormModalComponent
     });
     this.searched_ticket.extra_properties.forEach((extra_input) => {
       const prop_name = extra_input.propertyDescription.property;
-      const value =
-        extra_input.property_value != 'null' ? extra_input.property_value : '';
+      let value: any = '';
+      if (
+        (extra_input.property_value != 'null' &&
+          extra_input.property_value != 'NULL') ||
+        extra_input.data_type == 'boolean'
+      ) {
+        value =
+          extra_input.propertyDescription.data_type == 'boolean'
+            ? extra_input.property_value == 'true'
+            : extra_input.property_value;
+      }
       this.ticketFormGroup.addControl(
         prop_name,
         new FormControl(
@@ -201,7 +219,8 @@ export class TicketFormModalComponent
         this.searched_violator.extra_properties;
       this.extra_inputs.ext_violators = data;
       this.extra_inputs.ext_violators.data.forEach((extra_input) => {
-        let default_value = extra_input.data_type == 'boolean' ? false : null;
+        let default_value: any =
+          extra_input.data_type == 'boolean' ? false : null;
         if (violator_extra_properties) {
           for (
             let index = 0;
@@ -210,26 +229,38 @@ export class TicketFormModalComponent
           ) {
             const ext = violator_extra_properties[index];
             if (ext.propertyDescription.id == extra_input.id) {
-              default_value =
-                ext.property_value != 'null'
-                  ? ext.property_value
-                  : default_value;
+              // default_value =
+              //   ext.property_value != 'null' &&
+              //   ext.property_value != 'NULL' &&
+              //   extra_input.data_type != 'boolean'
+              //     ? ext.property_value
+              //     : default_value;
+              if (
+                (ext.property_value != 'null' &&
+                  ext.property_value != 'NULL') ||
+                extra_input.data_type == 'boolean'
+              ) {
+                default_value =
+                  ext.propertyDescription.data_type == 'boolean'
+                    ? ext.property_value == 'true'
+                    : ext.property_value;
+              }
               violator_extra_properties.splice(index, 1);
               break;
             }
           }
         }
-        if (extra_input.data_type != 'image') {
-          try {
-            this.ticketFormGroup.addControl(
-              extra_input.property,
-              new FormControl(
-                default_value,
-                extra_input.is_required ? Validators.required : []
-              )
-            );
-          } catch (error) {}
-        }
+        // if (extra_input.data_type != 'image') {
+        try {
+          this.ticketFormGroup.addControl(
+            extra_input.property,
+            new FormControl(
+              default_value,
+              extra_input.is_required ? Validators.required : []
+            )
+          );
+        } catch (error) {}
+        // }
       });
     });
 

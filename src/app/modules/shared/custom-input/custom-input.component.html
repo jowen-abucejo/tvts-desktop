@@ -63,7 +63,10 @@
   <ion-label [ngClass]="{ 'required-field': required_field }">
     {{ label }}</ion-label
   >
-  <ion-toggle (ionChange)="toggleValue()"></ion-toggle>
+  <ion-toggle
+    (ionChange)="toggleValue()"
+    checked="{{ parentForm.get(controller).value }}"
+  ></ion-toggle>
 </ion-item>
 <ion-item
   [formGroup]="parentForm"

@@ -1,5 +1,5 @@
 {
-  "appId": "com.yourdoamnin.yourapp",
+  "appId": "com.yourdomain.yourapp",
   "directories": {
     "buildResources": "resources"
   },
@@ -9,7 +9,8 @@
     "allowElevation": true,
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": true
+    "deleteAppDataOnUninstall": true,
+    "license": "LICENSE.txt"
   },
   "win": {
     "target": "nsis",
