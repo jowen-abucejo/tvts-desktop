@@ -47,8 +47,33 @@
 
       <ion-col size="12" size-lg="4" class="lg-h100">
         <div class="wrapper ion-padding custom-card">
-          <h5 class="ion-no-margin ion-margin-bottom">Data Distribution</h5>
-
+          <h5 class="ion-no-margin ion-margin-bottom">
+            Data Distribution <br />
+          </h5>
+          <p style="margin-top: -10px; margin-bottom: 10px">
+            Date Range: (
+            <b *ngIf="dateRangeFormGroup.get('start_date').value"
+              >{{ dateRangeFormGroup.get('start_date').value }}</b
+            >
+            <b *ngIf="!dateRangeFormGroup.get('start_date').value"
+              >start date</b
+            >
+            &nbsp;to&nbsp;
+            <b *ngIf="dateRangeFormGroup.get('end_date').value"
+              >{{ dateRangeFormGroup.get('end_date').value }}</b
+            >
+            <b *ngIf="!dateRangeFormGroup.get('end_date').value">end date</b>
+            )
+            <br />
+            <ion-button
+              (click)="promptDateFilter($event)"
+              fill="outline"
+              size="small"
+              color="primary"
+              ><ion-icon name="calendar" slot="start"></ion-icon>Change Date
+              Range
+            </ion-button>
+          </p>
           <ion-list
             class="ion-justify-content-center ion-padding-end"
             *ngIf="chart_statistics.violations"
@@ -113,6 +138,7 @@
                   <th>Violator</th>
                   <th>Violation/s</th>
                   <th>Date & Time</th>
+                  <th>STATUS</th>
                 </tr>
               </thead>
               <tbody *ngIf="rows.length">
@@ -128,6 +154,7 @@
                     >
                   </td>
                   <td>{{ row.apprehension_datetime }}</td>
+                  <td>{{ row.status_text }}</td>
                 </tr>
               </tbody>
             </table>

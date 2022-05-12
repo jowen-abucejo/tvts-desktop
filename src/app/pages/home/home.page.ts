@@ -3,6 +3,15 @@ import { ChartConfiguration, ChartType } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { UtilityService } from '../../services/utility.service';
 import { ApiService } from '../../services/api.service';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { PopoverController } from '@ionic/angular';
+import { PopoverComponent } from 'src/app/modules/shared/popover/popover.component';
 
 @Component({
   selector: 'app-home',
@@ -24,6 +33,13 @@ export class HomePage implements OnInit {
   /*chart structure START HERE*/
   public chartType: ChartType = 'bar';
   @ViewChild(BaseChartDirective) baseChart: BaseChartDirective;
+  dateRangeFormGroup: FormGroup = new FormGroup({
+    start_date: new FormControl('', Validators.required),
+    end_date: new FormControl('', [
+      Validators.required,
+      this.dateRangeValid('start_date'),
+    ]),
+  });
 
   public chartData: ChartConfiguration['data'] = {
     datasets: [
@@ -90,15 +106,48 @@ export class HomePage implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private utility: UtilityService
+    private utility: UtilityService,
+    private popoverController: PopoverController
   ) {}
 
   async ngOnInit() {
-    //fetch data to be use by page from api
-    const data = await this.apiService.getTicketCountByDate().catch((res) => {
-      this.utility.alertErrorStatus(res, true, true);
-      return null;
+    this.dateRangeFormGroup.controls.start_date.valueChanges.subscribe(() => {
+      this.dateRangeFormGroup.controls.end_date.updateValueAndValidity();
     });
+    this.fetchData();
+  }
+
+  async applyDateFilter() {
+    const loading = await this.utility.createIonLoading();
+    loading.present();
+    await this.popoverController.dismiss('dateRangeFilter');
+    const range = [
+      this.dateRangeFormGroup.get('start_date').value,
+      this.dateRangeFormGroup.get('end_date').value,
+    ];
+    await this.fetchData(range);
+    loading.dismiss();
+  }
+
+  private dateRangeValid(
+    from: string // name of the from date control
+  ): (AbstractControl) => ValidationErrors | null {
+    return (control: AbstractControl): ValidationErrors | null => {
+      return !!control.parent &&
+        !!control.parent.value &&
+        control.value >= control.parent.controls[from].value
+        ? null
+        : { isValidRange: false };
+    };
+  }
+
+  async fetchData(range = null) {
+    const data = await this.apiService
+      .getTicketCountByDate(range)
+      .catch((res) => {
+        this.utility.alertErrorStatus(res, true, true);
+        return null;
+      });
     if (!data) return;
     this.page_data = data.data;
     this.prepareChartData();
@@ -107,11 +156,12 @@ export class HomePage implements OnInit {
     //store latest ticket count grouped by violations
     this.latest_violations = this.page_data?.violation_count; //number of tickets for each violation within the period covered in chart
 
-    this.showRecentRecordsTally();
+    await this.showRecentRecordsTally();
   }
 
   prepareChartData() {
     if (this.page_data.daily_ticket) {
+      const days = this.page_data.daily_ticket.length - 1;
       this.chartData.datasets[0].data = this.page_data.daily_ticket.map(
         ({ total_tickets }) => total_tickets
       );
@@ -122,6 +172,16 @@ export class HomePage implements OnInit {
         this.page_data.date.year +
         ' Issued Tickets Overview';
       this.isTicketCountLoaded = true;
+
+      if (days >= 0) {
+        this.dateRangeFormGroup.controls.start_date.setValue(
+          this.page_data.daily_ticket[0].day_order
+        );
+        this.dateRangeFormGroup.controls.end_date.setValue(
+          this.page_data.daily_ticket[days].day_order
+        );
+      }
+      this.baseChart?.update();
     }
   }
 
@@ -133,6 +193,40 @@ export class HomePage implements OnInit {
       x = e.violations.map(({ violation }) => violation);
       e.violations = x;
     });
+  }
+
+  async promptDateFilter(ev) {
+    const componentProps = {
+      title: 'Select Date Range',
+      subtitle: 'Load all records within the given range.',
+      isForm: true,
+      parentFormGroup: this.dateRangeFormGroup,
+      items: [
+        {
+          label: 'FROM',
+          label_position: 'stacked',
+          input_type: 'date',
+          controller: 'start_date',
+          placeholder: '',
+        },
+        {
+          label: 'TO',
+          label_position: 'stacked',
+          input_type: 'date',
+          controller: 'end_date',
+          placeholder: '',
+        },
+      ],
+      submit_label: 'Apply Date Filter',
+      formSubmitCallback: () => this.applyDateFilter(),
+    };
+    const popover = await this.popoverController.create({
+      component: PopoverComponent,
+      componentProps: componentProps,
+      event: ev,
+      id: 'dateRangeFilter',
+    });
+    return await popover.present();
   }
 
   reloadPage() {

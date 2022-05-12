@@ -155,19 +155,18 @@ export class ApiService {
 
   /**
    * Get total number of tickets for each day within the given month and year
-   * @param year year the ticket was issued
-   * @param month month the ticket was issued
+   * @param date_range the start and end date to get records from
    * @returns Returns a promise that resolves with an object consist of total number of tickets for each day within the given month and year
    */
-  getTicketCountByDate(year: number = 0, month: number = 0) {
+  getTicketCountByDate(date_range = null) {
     return this.http
       .get(
         `${this.api.domain}/api/${this.api.version}/${API_URL.GET_TICKET_COUNT_BY_DATE}`,
         {
           headers: this.auth.createHeaderWithToken(),
           params: {
-            year,
-            month,
+            start_date: date_range ? date_range[0] : '',
+            end_date: date_range ? date_range[1] : '',
           },
         }
       )

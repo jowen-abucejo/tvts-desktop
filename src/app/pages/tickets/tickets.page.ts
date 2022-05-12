@@ -937,11 +937,15 @@ export class TicketsPage implements OnInit, ViewWillLeave {
       return;
     }
 
-    this.showTicketFormModal(false, true, null, ticket.data, ticket_id).finally(
-      () => {
-        loading.dismiss();
-      }
-    );
+    this.showTicketFormModal(
+      false,
+      true,
+      null,
+      ticket.data,
+      ticket_number
+    ).finally(() => {
+      loading.dismiss();
+    });
     this.popoverController.dismiss();
   }
 

@@ -59,7 +59,32 @@
         Hide/Show Column
       </ion-button>
     </ion-buttons>
+    <p class="ion-padding-horizontal ion-hide-md-down">
+      Showing all records
+      <span *ngIf="isDateFilterApplied">
+        from <b>{{ dateRangeFormGroup.get('start_date').value }}</b> to
+        <b>{{ dateRangeFormGroup.get('end_date').value }}</b> </span
+      ><span *ngIf="!isDateFilterApplied"> (latest to oldest)</span>
+    </p>
     <ion-buttons slot="end">
+      <ion-button
+        *ngIf="!isDateFilterApplied"
+        (click)="promptDateFilter($event)"
+        fill="outline"
+        size="small"
+        color="primary"
+        [disabled]="isSearching"
+        ><ion-icon name="calendar-outline" slot="start"></ion-icon>DATE FILTER
+      </ion-button>
+      <ion-button
+        *ngIf="isDateFilterApplied"
+        (click)="promptDateFilter($event)"
+        fill="solid"
+        size="small"
+        color="primary"
+        [disabled]="isSearching"
+        ><ion-icon name="calendar" slot="start"></ion-icon>DATE FILTER
+      </ion-button>
       <ion-button
         (click)="promptTicketSearch()"
         fill="solid"

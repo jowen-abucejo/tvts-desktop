@@ -55,9 +55,16 @@ export class AppComponent {
       message: 'Please wait...',
     });
     await loading.present();
-    await this.auth.logout().catch((err) => {}); //revoke token on api server
-    await loading.dismiss();
-    this.router.navigateByUrl('login', { replaceUrl: true });
+    await this.auth.logout().then(
+      () => {},
+      (err) => {}
+    ); //revoke token on api server
+    this.router
+      .navigateByUrl('login', { replaceUrl: true })
+      .finally(async () => {
+        await loading.dismiss();
+        window.location.reload();
+      });
   }
 
   togglePane() {
