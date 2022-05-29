@@ -206,7 +206,7 @@ export class ExtraInputFormModalComponent
   addOption() {
     const new_option = new FormControl('New Option', [
       Validators.required,
-      Validators.pattern('[a-zA-Z0-9Ññ][a-zA-Z0-9Ññ,. -]*'),
+      Validators.pattern('[a-zA-Z0-9Ññ][a-zA-Z0-9Ññ. -]*'),
     ]);
     this.optionsArray.push(new_option);
   }

@@ -937,15 +937,11 @@ export class TicketsPage implements OnInit, ViewWillLeave {
       return;
     }
 
-    this.showTicketFormModal(
-      false,
-      true,
-      null,
-      ticket.data,
-      ticket_number
-    ).finally(() => {
-      loading.dismiss();
-    });
+    this.showTicketFormModal(false, true, null, ticket.data, ticket_id).finally(
+      () => {
+        loading.dismiss();
+      }
+    );
     this.popoverController.dismiss();
   }
 
@@ -989,7 +985,7 @@ export class TicketsPage implements OnInit, ViewWillLeave {
       component: TicketFormModalComponent,
       backdropDismiss: false,
       componentProps: {
-        title: toCreate ? 'New Ticket' : 'Ticket ' + ticket_id,
+        title: toCreate ? 'New Ticket' : 'Ticket ' + ticket.number,
         new_ticket: toCreate,
         update_ticket: toUpdate,
         modalCtrl: this.modalController,

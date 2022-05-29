@@ -95,6 +95,10 @@ export class TicketFormModalComponent
         value =
           extra_input.propertyDescription.data_type == 'boolean'
             ? extra_input.property_value == 'true'
+            : extra_input.propertyDescription.data_type == 'selection' &&
+              extra_input.propertyDescription.is_multiple_select &&
+              extra_input.property_value
+            ? extra_input.property_value.split(',')
             : extra_input.property_value;
       }
       this.ticketFormGroup.addControl(
@@ -119,6 +123,10 @@ export class TicketFormModalComponent
         value =
           extra_input.propertyDescription.data_type == 'boolean'
             ? extra_input.property_value == 'true'
+            : extra_input.propertyDescription.data_type == 'selection' &&
+              extra_input.propertyDescription.is_multiple_select &&
+              extra_input.property_value
+            ? extra_input.property_value.split(',')
             : extra_input.property_value;
       }
       this.ticketFormGroup.addControl(
@@ -229,12 +237,6 @@ export class TicketFormModalComponent
           ) {
             const ext = violator_extra_properties[index];
             if (ext.propertyDescription.id == extra_input.id) {
-              // default_value =
-              //   ext.property_value != 'null' &&
-              //   ext.property_value != 'NULL' &&
-              //   extra_input.data_type != 'boolean'
-              //     ? ext.property_value
-              //     : default_value;
               if (
                 (ext.property_value != 'null' &&
                   ext.property_value != 'NULL') ||
@@ -243,6 +245,10 @@ export class TicketFormModalComponent
                 default_value =
                   ext.propertyDescription.data_type == 'boolean'
                     ? ext.property_value == 'true'
+                    : ext.propertyDescription.data_type == 'selection' &&
+                      ext.propertyDescription.is_multiple_select &&
+                      ext.property_value
+                    ? ext.property_value.split(',')
                     : ext.property_value;
               }
               violator_extra_properties.splice(index, 1);
